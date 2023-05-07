@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "jointjs": "^3.7.1",
     "lit": "^2.6.1"
   },
   "devDependencies": {

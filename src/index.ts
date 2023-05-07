@@ -1,3 +1,2 @@
 export * from './my-element';
-export * from './my-graph';
-
+export * from './graph/my-graph';
