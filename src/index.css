@@ -28,7 +28,7 @@ body {
   margin: 0;
   /* display: flex; */
   place-items: center;
-  min-width: 320px;
+  min-width: 100vw;
   min-height: 100vh;
 }
 
@@ -42,7 +42,9 @@ body {
 
 my-graph {
   width: 100vw;
-  height: 100vh;
+  height: 800px;
   display: block;
+  padding: 0;
+  margin: 0;
   background-color: rgb(32, 32, 32);
 }
