@@ -1,3 +1,4 @@
+import { Graph } from "./graph"
 
 export const exampleData: Graph = {
     nodes: [
@@ -13,8 +14,6 @@ export const exampleData: Graph = {
                     name: "output-2"
                 }
             ],
-            cx: 100,
-            cy: 100
         },
         {
             id: "2",
@@ -32,8 +31,6 @@ export const exampleData: Graph = {
                     name: "output"
                 }
             ],
-            cx: 150,
-            cy: 200
         },
         {
             id: "3",
@@ -51,8 +48,6 @@ export const exampleData: Graph = {
                     name: "output"
                 }
             ],
-            cx: 400,
-            cy: 300
         },
                     {
             id: "4",
@@ -91,12 +86,20 @@ export const exampleData: Graph = {
                     name: "output"
                 }
             ],
-            cx: 300,
-            cy: 400
         }
 
     ],
     edges: [
-
+        {
+            text: "edge-1",
+            from: {
+                nodeId: "1",
+                portName: "output-1"
+            },
+            to: {
+                nodeId: "2",
+                portName: "input-1"
+            }
+        }
     ]
 }
