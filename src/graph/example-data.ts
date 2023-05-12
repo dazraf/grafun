@@ -4,21 +4,22 @@ export const exampleData: Graph = {
     nodes: [
         {
             id: "1",
-            text: "node-1",
+            text: "random pairs",
             inputs: [],
             outputs: [
                 {
                     name: "output-1",
-                    label: "output 1"
+                    label: "lhs"
                 },
                 {
-                    name: "output-2"
+                    name: "output-2",
+                    label: "rhs"
                 }
             ],
         },
         {
             id: "2",
-            text: "node-2",
+            text: "amplifier",
             inputs: [
                 {
                     name: "input-1"
@@ -29,30 +30,34 @@ export const exampleData: Graph = {
             ],
             outputs: [
                 {
-                    name: "output-1"
+                    name: "output-1",
+                    label: "value"
                 }
             ],
         },
         {
             id: "3",
-            text: "this is a longer label to test the width calc",
+            text: "noise",
             inputs: [
                 {
-                    name: "input-1"
+                    name: "input-1",
+                    label: "source 1"
                 },
                 {
-                    name: "input-2"
+                    name: "input-2",
+                    label: "source 2"
                 }
             ],
             outputs: [
                 {
-                    name: "output-1"
+                    name: "output-1",
+                    label: "value"
                 }
             ],
         },
                     {
             id: "4",
-            text: "many inputs",
+            text: "sequencer",
             inputs: [
                 {
                     name: "input-1"
@@ -92,7 +97,7 @@ export const exampleData: Graph = {
     ],
     edges: [
         {
-            label: "edge-1",
+            label: "random data",
             from: {
                 nodeId: "1",
                 portName: "output-2"
@@ -103,7 +108,7 @@ export const exampleData: Graph = {
             }
         },
         {
-            label: "edge-2",
+            label: "amplified",
             from: {
                 nodeId: "2",
                 portName: "output-1"
@@ -114,7 +119,7 @@ export const exampleData: Graph = {
             }
         },
         {
-            label: "edge-3",
+            label: "noisified",
             from: {
                 nodeId: "3",
                 portName: "output-1"
@@ -125,7 +130,7 @@ export const exampleData: Graph = {
             }
         },
         {
-            label: "edge-4",
+            label: "sequenced for feedback",
             from: {
                 nodeId: "4",
                 portName: "output-1"
