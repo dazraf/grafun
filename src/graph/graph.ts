@@ -14,6 +14,7 @@ export interface GraphNode {
 
 export interface GraphPort {
     name: string
+    label?: string 
 }
 
 export interface GraphPortRef {
@@ -24,7 +25,7 @@ export interface GraphPortRef {
 export interface GraphEdge {
     from: GraphPortRef
     to: GraphPortRef
-    text: string
+    label: string
 }
 
 export function buildGraph(graph: Graph): GraphImpl {
@@ -40,6 +41,8 @@ export class GraphImpl implements Graph {
     nodeHeight = 40;
     portGap = 5;
     totalPortWidth = this.portWidth + this.portGap;
+    viewBox = DOMRect.fromRect({x: 0, y: 0, width: 0, height: 0})
+    private _graphBounds?: DOMRect = undefined
 
     constructor(graph: Graph | undefined = undefined) {
         if (graph) {
@@ -50,6 +53,21 @@ export class GraphImpl implements Graph {
 
     findNode(id: string): GraphNodeImpl | undefined {
         return this.nodes.find(node => node.id === id)
+    }
+
+    get graphBounds(): DOMRect {
+        return this._graphBounds ?? (this._graphBounds = this.calculateGraphBounds())
+    }
+    get viewBoxString(): string {
+        return `${this.viewBox.x} ${this.viewBox.y} ${this.viewBox.width} ${this.viewBox.height}`
+    }
+
+    private calculateGraphBounds(): DOMRect {
+        const minX = Math.min(...this.nodes.map(node => node.x))
+        const minY = Math.min(...this.nodes.map(node => node.y))
+        const maxX = Math.max(...this.nodes.map(node => node.x + node.width))
+        const maxY = Math.max(...this.nodes.map(node => node.y + node.height))
+        return DOMRect.fromRect({x: minX, y: minY, width: maxX - minX, height: maxY - minY})
     }
 }
 
@@ -104,12 +122,14 @@ export enum PortType {
 
 export class GraphPortImpl implements GraphPort {
     name: string
+    label: string
     portType: PortType
     index: number
     node: GraphNodeImpl
 
     constructor(port: GraphPort, portType: PortType, index: number, node: GraphNodeImpl) {
         this.name = port.name
+        this.label = port.label ?? this.name
         this.portType = portType
         this.index = index
         this.node = node
@@ -142,28 +162,31 @@ export class GraphPortImpl implements GraphPort {
 export class GraphEdgeImpl implements GraphEdge {
     from: GraphPortRef
     to: GraphPortRef
-    text: string
+    label: string
     graph: GraphImpl
+    private _fromPort? : GraphPortImpl
+    private _toPort? : GraphPortImpl
+    pathDefinition = ""
 
     constructor(edge: GraphEdge, graph: GraphImpl) {
         this.from = edge.from
         this.to = edge.to
-        this.text = edge.text
+        this.label = edge.label
         this.graph = graph
     }
 
     get fromPort(): GraphPortImpl {
-        const port = this.graph.findNode(this.from.nodeId)?.getPort(this.from.portName)    
-        if (port === undefined) {
-            throw new Error(`Unable to find 'from' port ${this.from.nodeId}.${this.from.portName}`)
-        }
-        return port
+        return this._fromPort ?? (this._fromPort = this.findPort(this.from));
     }
 
     get toPort(): GraphPortImpl {
-        const port = this.graph.findNode(this.to.nodeId)?.getPort(this.to.portName)
+        return this._toPort ?? (this._toPort = this.findPort(this.to));
+    }
+
+    private findPort(portRef: GraphPortRef): GraphPortImpl {
+        const port = this.graph.findNode(portRef.nodeId)?.getPort(portRef.portName)    
         if (port === undefined) {
-            throw new Error(`Unable to find 'to' port ${this.to.nodeId}.${this.to.portName}`)
+            throw new Error(`Unable to find 'from' port ${portRef.nodeId}.${portRef.portName}`)
         }
         return port
     }

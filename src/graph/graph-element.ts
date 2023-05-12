@@ -2,7 +2,7 @@
 import { LitElement, svg, css, html, PropertyValueMap } from "lit"
 import { customElement } from "lit/decorators.js"
 import { exampleData } from "./example-data"
-import { Graph, GraphEdgeImpl, GraphImpl, GraphNodeImpl, GraphPortImpl, buildGraph } from "./graph"
+import { Graph, GraphEdgeImpl, GraphImpl, GraphNodeImpl, GraphPortImpl, PortType, buildGraph } from "./graph"
 
 
 interface PanState {
@@ -36,8 +36,13 @@ class GraphElement extends LitElement {
         fill: rgb(73, 137, 121)
     }
     .edge {
-        stroke: rgb(61, 116, 102)
-
+        stroke: rgba(73, 137, 121, 0.5);
+        fill: none;
+        stroke-linecap: butt;
+        stroke-linejoin: round;
+    }
+    .edge:hover {
+        stroke: rgba(73, 137, 121, 1.0);
     }
     `;
 
@@ -48,85 +53,54 @@ class GraphElement extends LitElement {
     connectedCallback(): void {
         super.connectedCallback()
         this.layoutGraph()
+        console.log(this.graph)
     }
 
     protected render() {
+        
         return html`
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg"
+            <svg 
+                version="1.1" xmlns="http://www.w3.org/2000/svg" 
+                viewBox="${this.graph.viewBoxString}"
                 id="main-canvas">
-                ${this.graph.nodes.map(node => this.renderNode(node))}
-                ${this.graph.edges.map(edge => this.renderEdge(edge))}
+                ${this.renderGraph()}
             </svg>
         `
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
     protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-        const host = this.shadowRoot?.host
-        if (!host) {
-            throw new Error("host element not found")
-        }
-
         // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const _this = this
-
-        const svg = this.getSvgElement()
-        const viewBox = svg.viewBox.baseVal
-        viewBox.x = 0
-        viewBox.y = 0
-        viewBox.width = host.clientWidth
-        viewBox.height = host.clientHeight
-
-        svg.setAttribute('height', `${viewBox.height}`)
-        svg.setAttribute('width', `${viewBox.width}`)
-        svg.addEventListener('wheel', e => { _this.onWheel(e) })
-        svg.addEventListener('mousedown', e => { _this.onMouseDown(e) })
-        svg.addEventListener('mouseup', e => { _this.onMouseUp(e) })
-        svg.addEventListener('mousemove', e => { _this.onMouseMove(e) })
-        svg.addEventListener('click', e => { _this.onInputClick(e) })
-
-    }
-
-    private layoutGraph() {
-        this.graph = buildGraph(this.data)
-        const orderedNodes = this.graph.nodes.sort(
-            (a, b) =>
-                (b.outputs.length - b.inputs.length) - (a.outputs.length - a.inputs.length))
-        orderedNodes.forEach((node, index) => {
-            node.x = 100 + index * 50
-            node.y = 100 + index * (this.graph.nodeHeight + this.graph.portHeight + 100)
-        })
-    }
-
-    private getSvgElement(): SVGSVGElement {
-        const renderDocument = this.renderRoot as unknown as Document
-        const svgElement = renderDocument.getElementById('main-canvas') as unknown as SVGSVGElement
-        return svgElement
+        const svg = this.svg
+        svg.addEventListener('wheel', e => { this.onWheel(e) })
+        svg.addEventListener('mousedown', e => { this.onMouseDown(e) })
+        svg.addEventListener('mouseup', e => { this.onMouseUp(e) })
+        svg.addEventListener('mousemove', e => { this.onMouseMove(e) })
+        svg.addEventListener('click', e => { this.onInputClick(e) })
     }
 
     private onWheel(e: WheelEvent) {
         const scalingFactor = (100 + (-e.deltaY / 20)) / 100
 
-        const svg = this.getSvgElement()
+        const svg = this.svg
         const point = this.svgPoint(e.clientX, e.clientY)
 
         const newStartPoint = point.matrixTransform(svg.getScreenCTM()!.inverse())
-        const viewBox = svg.viewBox.baseVal
-        viewBox.x -= (newStartPoint.x - viewBox.x) * (scalingFactor - 1)
-        viewBox.y -= (newStartPoint.y - viewBox.y) * (scalingFactor - 1)
-        viewBox.width *= scalingFactor
-        viewBox.height *= scalingFactor
+        this.graph.viewBox.x -= (newStartPoint.x - this.graph.viewBox.x) * (scalingFactor - 1)
+        this.graph.viewBox.y -= (newStartPoint.y - this.graph.viewBox.y) * (scalingFactor - 1)
+        this.graph.viewBox.width *= scalingFactor
+        this.graph.viewBox.height *= scalingFactor
+        this.requestUpdate();
     }
 
     private onMouseDown(e: MouseEvent) {
         e.stopPropagation()
         e.preventDefault()
-        const baseVal = this.getSvgElement().viewBox.baseVal
         this.panningState = {
             cx: e.clientX,
             cy: e.clientY,
-            viewBoxOrigin: this.svgPoint(baseVal.x, baseVal.y)
-        }
+            viewBoxOrigin: this.svgPoint(this.graph.viewBox.x, this.graph.viewBox.y)
+        } 
     }
 
     private onMouseUp(e: MouseEvent) {
@@ -139,21 +113,58 @@ class GraphElement extends LitElement {
         if (!this.panningState) return
         e.stopPropagation()
         e.preventDefault()
-        const svg = this.getSvgElement()
+        const svg = this.svg
         const delta = this.svgPoint(e.clientX - this.panningState.cx, e.clientY - this.panningState.cy)
         const screenv = this.panningState.viewBoxOrigin.matrixTransform(svg.getScreenCTM()!)
         screenv.x -= delta.x
         screenv.y -= delta.y
         const newV = screenv.matrixTransform(svg.getScreenCTM()!.inverse())
-        svg.viewBox.baseVal.x = newV.x
-        svg.viewBox.baseVal.y = newV.y
+        this.graph.viewBox.x = newV.x
+        this.graph.viewBox.y = newV.y
+        this.requestUpdate()
     }
 
-    private svgPoint(x: number, y: number): SVGPoint {
-        const pt = this.getSvgElement().createSVGPoint()
-        pt.x = x
-        pt.y = y
-        return pt
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
+    private onInputClick(_event: MouseEvent) {
+    }
+    
+
+    private layoutGraph() {
+        this.graph = buildGraph(this.data)
+        this.graph.viewBox.x = 0;
+        this.graph.viewBox.y = 0;  
+        this.graph.viewBox.width = this.host.clientWidth
+        this.graph.viewBox.height = this.host.clientHeight
+
+        const orderedNodes = this.graph.nodes.sort(
+            (a, b) =>
+                (b.outputs.length - b.inputs.length) - (a.outputs.length - a.inputs.length))
+
+        orderedNodes.forEach((node, index) => {
+            node.x = 100 + index * 50
+            node.y = 100 + index * (this.graph.nodeHeight + this.graph.portHeight + 100)
+        })
+
+        this.graph.edges.forEach(edge => {
+            if (edge.fromPort.portType == PortType.Output && edge.toPort.portType == PortType.Input) {
+                const startPort = edge.fromPort
+                const endPort = edge.toPort
+                const sx = startPort.x + startPort.width / 2
+                const sy = startPort.y + startPort.height
+                const ex = endPort.x + startPort.width / 2
+                const ey = endPort.y
+                const my = (sy + ey) / 2
+                const pathDefinition = `M ${sx} ${sy} L ${sx} ${my} L ${ex} ${my} L ${ex} ${ey}`
+                edge.pathDefinition = pathDefinition
+            }
+        });
+    }
+
+    private renderGraph() {
+        return svg`
+            ${this.graph.nodes.map(node => this.renderNode(node))}
+            ${this.graph.edges.map(edge => this.renderEdge(edge))}
+        `
     }
 
     private renderNode(node: GraphNodeImpl) {
@@ -179,37 +190,40 @@ class GraphElement extends LitElement {
                     y=${port.y} 
                     width=${port.width} 
                     height=${port.height}
-                    pointer-events="visiblePainted"
-                    <title>${port.name}</title>
+                    pointer-events="visiblePainted">
+                    <title>${port.label}</title>
             </rect> 
         `
     }
 
     private renderEdge(edge: GraphEdgeImpl) {
         const startPort = edge.fromPort
-        const endPort = edge.toPort
-
-        const sx = startPort.x + startPort.width / 2
-        const sy = startPort.y + startPort.height
-        const d1x = sx
-        const d1y = sy + 3 * startPort.height
-        const ex = endPort.x + startPort.width / 2
-        const ey = endPort.y
-        const d2x = ex
-        const d2y = ey - 3 * endPort.height
-
         return svg`
-            <path class="edge" d="M ${sx} ${sy} C ${d1x} ${d1y} ${d2x} ${d2y} ${ex} ${ey}" stroke-width="${startPort.width}" stroke-linecap="butt"/>
+            <path class="edge" d="${edge.pathDefinition}" stroke-width="${startPort.width}">
+                <title>${edge.label}</title>
+            </path>
         `
     }
 
-    private onInputClick(event: MouseEvent) {
-        if (!event.target) return
-        const color = Math.round(Math.random() * 0xffffff)
-        const fill = `#${color.toString(16).padStart(6, "0")}`
-        const svgGeometryElement = event.target as SVGGeometryElement
-        console.log(svgGeometryElement)
-        svgGeometryElement.style.fill = fill
+    private get host(): Element {
+        const host = this.shadowRoot?.host
+        if (!host) {
+            throw new Error("host element not found")
+        }
+        return host
+    }
+
+    private get svg(): SVGSVGElement {
+        const renderDocument = this.renderRoot as unknown as Document
+        const svgElement = renderDocument.getElementById('main-canvas') as unknown as SVGSVGElement
+        return svgElement
+    }
+
+    private svgPoint(x: number, y: number): SVGPoint {
+        const pt = this.svg.createSVGPoint()
+        pt.x = x
+        pt.y = y
+        return pt
     }
 }
 

@@ -8,7 +8,8 @@ export const exampleData: Graph = {
             inputs: [],
             outputs: [
                 {
-                    name: "output-1"
+                    name: "output-1",
+                    label: "output 1"
                 },
                 {
                     name: "output-2"
@@ -28,7 +29,7 @@ export const exampleData: Graph = {
             ],
             outputs: [
                 {
-                    name: "output"
+                    name: "output-1"
                 }
             ],
         },
@@ -45,7 +46,7 @@ export const exampleData: Graph = {
             ],
             outputs: [
                 {
-                    name: "output"
+                    name: "output-1"
                 }
             ],
         },
@@ -83,7 +84,7 @@ export const exampleData: Graph = {
             ],
             outputs: [
                 {
-                    name: "output"
+                    name: "output-1"
                 }
             ],
         }
@@ -91,9 +92,42 @@ export const exampleData: Graph = {
     ],
     edges: [
         {
-            text: "edge-1",
+            label: "edge-1",
             from: {
                 nodeId: "1",
+                portName: "output-2"
+            },
+            to: {
+                nodeId: "2",
+                portName: "input-2"
+            }
+        },
+        {
+            label: "edge-2",
+            from: {
+                nodeId: "2",
+                portName: "output-1"
+            },
+            to: {
+                nodeId: "3",
+                portName: "input-1"
+            }
+        },
+        {
+            label: "edge-3",
+            from: {
+                nodeId: "3",
+                portName: "output-1"
+            },
+            to: {
+                nodeId: "4",
+                portName: "input-1"
+            }
+        },
+        {
+            label: "edge-4",
+            from: {
+                nodeId: "4",
                 portName: "output-1"
             },
             to: {
@@ -101,5 +135,7 @@ export const exampleData: Graph = {
                 portName: "input-1"
             }
         }
+
+
     ]
 }
