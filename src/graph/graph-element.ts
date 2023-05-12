@@ -141,6 +141,7 @@ class GraphElement extends LitElement {
                 (b.outputs.length - b.inputs.length) - (a.outputs.length - a.inputs.length))
 
         orderedNodes.forEach((node, index) => {
+            node.layer = index
             node.x = 100 + index * 50
             node.y = 100 + index * (this.graph.nodeHeight + this.graph.portHeight + 100)
         })

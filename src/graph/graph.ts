@@ -78,8 +78,9 @@ export class GraphNodeImpl implements GraphNode {
     outputs: GraphPortImpl[]
     x = 0
     y = 0
-    #width: number | undefined
     graph: GraphImpl
+    layer = 0
+    #width: number | undefined
 
 
     constructor(node: GraphNode, graph: GraphImpl) {
@@ -164,9 +165,9 @@ export class GraphEdgeImpl implements GraphEdge {
     to: GraphPortRef
     label: string
     graph: GraphImpl
-    private _fromPort? : GraphPortImpl
-    private _toPort? : GraphPortImpl
     pathDefinition = ""
+    #fromPort? : GraphPortImpl
+    #toPort? : GraphPortImpl
 
     constructor(edge: GraphEdge, graph: GraphImpl) {
         this.from = edge.from
@@ -176,11 +177,11 @@ export class GraphEdgeImpl implements GraphEdge {
     }
 
     get fromPort(): GraphPortImpl {
-        return this._fromPort ?? (this._fromPort = this.findPort(this.from));
+        return this.#fromPort ?? (this.#fromPort = this.findPort(this.from));
     }
 
     get toPort(): GraphPortImpl {
-        return this._toPort ?? (this._toPort = this.findPort(this.to));
+        return this.#toPort ?? (this.#toPort = this.findPort(this.to));
     }
 
     private findPort(portRef: GraphPortRef): GraphPortImpl {
