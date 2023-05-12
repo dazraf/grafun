@@ -28,6 +28,7 @@ body {
   margin: 0;
   /* display: flex; */
   place-items: center;
+  display: flex;
   min-width: 100vw;
   min-height: 100vh;
 }
@@ -41,8 +42,8 @@ body {
 
 
 my-graph {
-  width: 100vw;
-  height: 800px;
+  width: 100%;
+  height: 900px;
   display: block;
   padding: 0;
   margin: 0;
