@@ -3,68 +3,68 @@ import { Graph, GraphNode } from "../Graph"
 
 export class SugiyamaLayout implements GraphLayout {
     layout(graph: Graph): void {
-        this.assignLayers(graph);
-        this.orderNodesWithinLayers(graph);
-        this.calculateNodePositions(graph);
-        this.calculateEdgePaths(graph);
+        this.assignLayers(graph)
+        this.orderNodesWithinLayers(graph)
+        this.calculateNodePositions(graph)
+        this.calculateEdgePaths(graph)
     }
 
     private assignLayers(graph: Graph): void {
         // Assigns layers to nodes based on their dependencies
         for (const node of graph.nodes) {
-            node.layer = this.calculateLayer(graph, node);
+            node.layer = this.calculateLayer(graph, node)
         }
     }
 
     private calculateLayer(graph: Graph, node: GraphNode): number {
         // Calculates layer based on the layers of the nodes from which it has incoming edges
-        let maxLayer = 0;
+        let maxLayer = 0
         for (const edge of node.inputs.map(input => graph.edges.find(edge => edge.to.nodeId === input.node.id && edge.to.portName === input.name))) {
             if (edge) {
-                const fromNode = graph.findNode(edge.from.nodeId);
+                const fromNode = graph.findNode(edge.from.nodeId)
                 if (fromNode) {
-                    maxLayer = Math.max(maxLayer, fromNode.layer + 1);
+                    maxLayer = Math.max(maxLayer, fromNode.layer + 1)
                 }
             }
         }
-        return maxLayer;
+        return maxLayer
     }
 
     private orderNodesWithinLayers(graph: Graph): void {
         // Orders nodes within each layer to minimize edge crossings
         // Using a simple barycenter heuristic here; more complex heuristics may yield better results
         for (let layer = 0; layer <= Math.max(...graph.nodes.map(node => node.layer)); layer++) {
-            const layerNodes = graph.nodes.filter(node => node.layer === layer);
-            layerNodes.sort((nodeA, nodeB) => this.calculateBarycenter(graph, nodeA) - this.calculateBarycenter(graph, nodeB));
+            const layerNodes = graph.nodes.filter(node => node.layer === layer)
+            layerNodes.sort((nodeA, nodeB) => this.calculateBarycenter(graph, nodeA) - this.calculateBarycenter(graph, nodeB))
         }
     }
 
     private calculateBarycenter(graph: Graph, node: GraphNode): number {
         // Calculates the barycenter (average position) of the nodes from which the given node has incoming edges
-        let sum = 0;
-        let count = 0;
+        let sum = 0
+        let count = 0
         for (const edge of node.inputs.map(input => graph.edges.find(edge => edge.to.nodeId === input.node.id && edge.to.portName === input.name))) {
             if (edge) {
-                const fromNode = graph.findNode(edge.from.nodeId);
+                const fromNode = graph.findNode(edge.from.nodeId)
                 if (fromNode) {
-                    sum += fromNode.x + fromNode.width / 2;
-                    count++;
+                    sum += fromNode.x + fromNode.width / 2
+                    count++
                 }
             }
         }
-        return count > 0 ? sum / count : 0;
+        return count > 0 ? sum / count : 0
     }
 
     private calculateNodePositions(graph: Graph): void {
         // Assigns x and y coordinates to each node
         // Ensures that nodes in each layer are evenly spaced and that each layer is a fixed distance from the next
-        const layerSpacing = 100;
-        const nodeSpacing = 50;
+        const layerSpacing = 100
+        const nodeSpacing = 50
         for (let layer = 0; layer <= Math.max(...graph.nodes.map(node => node.layer)); layer++) {
-            const layerNodes = graph.nodes.filter(node => node.layer === layer);
+            const layerNodes = graph.nodes.filter(node => node.layer === layer)
             for (let i = 0; i < layerNodes.length; i++) {
-                layerNodes[i].x = i * (layerNodes[i].width + nodeSpacing);
-                layerNodes[i].y = layer * (layerNodes[i].height + layerSpacing);
+                layerNodes[i].x = i * (layerNodes[i].width + nodeSpacing)
+                layerNodes[i].y = layer * (layerNodes[i].height + layerSpacing)
             }
         }
     }
@@ -94,16 +94,6 @@ export class SugiyamaLayout implements GraphLayout {
 
                 edge.pathDefinition = `M ${sx} ${sy} L ${sx} ${sy + sp.height} L ${sx - leftDelta} ${sy + sp.height} L ${sx - leftDelta} ${ey - ep.height} L ${ex} ${ey - ep.height} L ${ex} ${ey}`
             }
-            // const fromPort = edge.fromPort;
-            // const toPort = edge.toPort;
-
-            // const fromX = fromPort.x + fromPort.width / 2;
-            // const fromY = fromPort.y + fromPort.height / 2;
-
-            // const toX = toPort.x + toPort.width / 2;
-            // const toY = toPort.y + toPort.height / 2;
-
-            // edge.pathDefinition = `M ${fromX} ${fromY} L ${toX} ${toY}`;
         }
     }
 }

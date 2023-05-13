@@ -141,6 +141,11 @@ class GraphElement extends LitElement {
         this.graph.portWidth = 10
         // new CrappyLayout().layout(this.graph)
         new SugiyamaLayout().layout(this.graph)
+        this.graph.viewBox.x = this.graph.graphBounds.x - 50
+        this.graph.viewBox.y = this.graph.graphBounds.y - 50
+        this.graph.viewBox.width = this.graph.graphBounds.width + 100
+        this.graph.viewBox.height = this.graph.graphBounds.height + 100
+        
     }
 
     private renderGraph() {
