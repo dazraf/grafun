@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { LitElement, svg, css, html, PropertyValueMap } from "lit"
-import { customElement } from "lit/decorators.js"
-import { exampleData } from "./ExampleData"
-import { GraphDefinition, GraphEdge, Graph, GraphNode, GraphPort, PortType, buildGraph } from "./Graph"
-import { CrappyLayout } from "./layouts/CrappyLayout"
+import { customElement, state } from "lit/decorators.js"
+import { GraphEdge, Graph, GraphNode, GraphPort } from "./Graph"
 import { SugiyamaLayout } from "./layouts/SugiyamaLayout"
+import { GraphDataProvider } from "./data/GraphDefinitionProvider"
+import { RandomGraphGenerator } from "./data/RandomGraphGenerator"
 
 
 interface PanState {
@@ -48,7 +48,9 @@ class GraphElement extends LitElement {
     }
     `;
 
-    private data: GraphDefinition = exampleData
+    @state() 
+    dataProvider: GraphDataProvider = new RandomGraphGenerator(8)
+
     private panningState: PanState | undefined
     private graph: Graph = new Graph()
 
@@ -59,7 +61,6 @@ class GraphElement extends LitElement {
     }
 
     protected render() {
-        
         return html`
             <svg 
                 version="1.1" xmlns="http://www.w3.org/2000/svg" 
@@ -132,20 +133,20 @@ class GraphElement extends LitElement {
     
 
     private layoutGraph() {
-        this.graph = buildGraph(this.data)
+        this.graph = Graph.buildGraph(this.dataProvider.data)
         this.graph.viewBox.x = 0;
         this.graph.viewBox.y = 0;  
         this.graph.viewBox.width = this.host.clientWidth
         this.graph.viewBox.height = this.host.clientHeight
         this.graph.portHeight = 7
         this.graph.portWidth = 10
+        this.graph.portGap = 20
         // new CrappyLayout().layout(this.graph)
-        new SugiyamaLayout().layout(this.graph)
+        new SugiyamaLayout(50).layout(this.graph)
         this.graph.viewBox.x = this.graph.graphBounds.x - 50
         this.graph.viewBox.y = this.graph.graphBounds.y - 50
         this.graph.viewBox.width = this.graph.graphBounds.width + 100
-        this.graph.viewBox.height = this.graph.graphBounds.height + 100
-        
+        this.graph.viewBox.height = this.graph.graphBounds.height + 100   
     }
 
     private renderGraph() {

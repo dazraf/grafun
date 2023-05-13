@@ -2,10 +2,14 @@ import { GraphLayout } from "./GraphLayout"
 import { Graph, GraphNode } from "../Graph"
 
 export class SugiyamaLayout implements GraphLayout {
+    constructor(public nodeSpacing: number, public layerSpacing: number = 100) {
+    }
+    
     layout(graph: Graph): void {
         this.assignLayers(graph)
         this.orderNodesWithinLayers(graph)
         this.calculateNodePositions(graph)
+        this.centreLayers(graph)
         this.calculateEdgePaths(graph)
     }
 
@@ -58,15 +62,13 @@ export class SugiyamaLayout implements GraphLayout {
     private calculateNodePositions(graph: Graph): void {
         // Assigns x and y coordinates to each node
         // Ensures that nodes in each layer are evenly spaced and that each layer is a fixed distance from the next
-        const layerSpacing = 100
-        const nodeSpacing = 20
         for (let layer = 0; layer <= Math.max(...graph.nodes.map(node => node.layer)); layer++) {
             const layerNodes = graph.nodes.filter(node => node.layer === layer)
             for (let i = 0; i < layerNodes.length; i++) {
                 const previousNodeX = i > 0 ? layerNodes[i - 1].x : 0
                 const previewNodeWidth = i > 0 ? layerNodes[i - 1].width : 0
-                layerNodes[i].x = previousNodeX + previewNodeWidth + nodeSpacing
-                layerNodes[i].y = layer * (layerNodes[i].height + layerSpacing)
+                layerNodes[i].x = previousNodeX + previewNodeWidth + this.nodeSpacing
+                layerNodes[i].y = layer * (layerNodes[i].height + this.layerSpacing)
             }
         }
     }
@@ -94,6 +96,20 @@ export class SugiyamaLayout implements GraphLayout {
                 const my = graph.portHeight * 4
 
                 edge.pathDefinition = `M ${sx} ${sy} L ${sx} ${sy + my} L ${ex} ${ey - my} L ${ex} ${ey}`
+            }
+        }
+    }
+
+    private centreLayers(graph: Graph): void {
+        // Centres each layer horizontally
+        for (let layer = 0; layer <= Math.max(...graph.nodes.map(node => node.layer)); layer++) {
+            const layerNodes = graph.nodes.filter(node => node.layer === layer)
+            const minX = Math.min(...layerNodes.map(node => node.x))
+            const maxX = Math.max(...layerNodes.map(node => node.x + node.width))
+            const layerWidth = maxX - minX
+            const xOffset = (graph.viewBox.width - layerWidth) / 2 - minX
+            for (const node of layerNodes) {
+                node.x += xOffset
             }
         }
     }

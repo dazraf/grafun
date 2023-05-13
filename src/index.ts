@@ -1,2 +1,2 @@
-export * from './my-element';
+export * from './app-element';
 export * from './graph/GraphElement';

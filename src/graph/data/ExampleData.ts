@@ -1,7 +1,14 @@
-import { generateRandomName } from "../names/NameGenerator"
-import { GraphDefinition } from "./Graph"
+import { generateRandomName } from "../../utilities/names/NameGenerator"
+import { GraphDefinition } from "./GraphDefinition"
+import { GraphDataProvider } from "./GraphDefinitionProvider"
 
-export const exampleData: GraphDefinition = {
+export class ExampleDataProvider implements GraphDataProvider {
+    get data(): GraphDefinition {
+        return exampleData;
+    }
+
+}
+const exampleData: GraphDefinition = {
     nodes: [
         {
             id: "1",

@@ -1,36 +1,4 @@
-
-
-export interface GraphDefinition {
-    nodes: GraphNodeDefinition[]
-    edges: GraphEdgeDefinition[]
-}
-
-export interface GraphNodeDefinition {
-    id: string
-    label: string
-    inputs: GraphPortDefinition[]
-    outputs: GraphPortDefinition[]
-}
-
-export interface GraphPortDefinition {
-    name: string
-    label?: string 
-}
-
-export interface GraphPortRef {
-    nodeId: string
-    portName: string
-}
-
-export interface GraphEdgeDefinition {
-    from: GraphPortRef
-    to: GraphPortRef
-    label: string
-}
-
-export function buildGraph(graph: GraphDefinition): Graph {
-    return new Graph(graph)
-}
+import { GraphDefinition, GraphNodeDefinition, GraphPortDefinition, GraphEdgeDefinition, GraphPortRef } from "./data/GraphDefinition"
 
 export class Graph implements GraphDefinition {
     nodes: GraphNode[] = [];
@@ -40,9 +8,14 @@ export class Graph implements GraphDefinition {
     nodePadding = 10;
     nodeHeight = 40;
     portGap = 5;
-    totalPortWidth = this.portWidth + this.portGap;
+    get totalPortWidth() { return this.portWidth + this.portGap; }
+    
     viewBox = DOMRect.fromRect({x: 0, y: 0, width: 0, height: 0})
     private _graphBounds?: DOMRect = undefined
+
+    static buildGraph(graph: GraphDefinition): Graph {
+        return new Graph(graph)
+    }
 
     constructor(graph: GraphDefinition | undefined = undefined) {
         if (graph) {
