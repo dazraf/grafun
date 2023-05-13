@@ -150,8 +150,8 @@ class GraphElement extends LitElement {
 
     private renderGraph() {
         return svg`
-            ${this.graph.nodes.map(node => this.renderNode(node))}
             ${this.graph.edges.map(edge => this.renderEdge(edge))}
+            ${this.graph.nodes.map(node => this.renderNode(node))}
         `
     }
 
