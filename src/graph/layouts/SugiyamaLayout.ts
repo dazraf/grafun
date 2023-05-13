@@ -59,11 +59,13 @@ export class SugiyamaLayout implements GraphLayout {
         // Assigns x and y coordinates to each node
         // Ensures that nodes in each layer are evenly spaced and that each layer is a fixed distance from the next
         const layerSpacing = 100
-        const nodeSpacing = 50
+        const nodeSpacing = 20
         for (let layer = 0; layer <= Math.max(...graph.nodes.map(node => node.layer)); layer++) {
             const layerNodes = graph.nodes.filter(node => node.layer === layer)
             for (let i = 0; i < layerNodes.length; i++) {
-                layerNodes[i].x = i * (layerNodes[i].width + nodeSpacing)
+                const previousNodeX = i > 0 ? layerNodes[i - 1].x : 0
+                const previewNodeWidth = i > 0 ? layerNodes[i - 1].width : 0
+                layerNodes[i].x = previousNodeX + previewNodeWidth + nodeSpacing
                 layerNodes[i].y = layer * (layerNodes[i].height + layerSpacing)
             }
         }
@@ -80,19 +82,18 @@ export class SugiyamaLayout implements GraphLayout {
                 const sy = startPort.y + startPort.height
                 const ex = endPort.x + startPort.width / 2
                 const ey = endPort.y
-                const my = (ey - sy) / 4
-                const mx = (ex - sx) / 4
+                const my = graph.portHeight * 4
                 edge.pathDefinition = `M ${sx} ${sy} L ${sx} ${sy + my} L ${ex} ${ey - my} L ${ex} ${ey}`
             } else {
-                const sp = edge.fromPort
-                const ep = edge.toPort
-                const sx = sp.x + sp.width / 2
-                const sy = sp.y + sp.height
-                const ex = ep.x + sp.width / 2
-                const ey = ep.y
-                const leftDelta = Math.max(sp.node.layer, ep.node.layer) * 50
+                const startPort = edge.fromPort
+                const endPort = edge.toPort
+                const sx = startPort.x + startPort.width / 2
+                const sy = startPort.y + startPort.height
+                const ex = endPort.x + startPort.width / 2
+                const ey = endPort.y
+                const my = graph.portHeight * 4
 
-                edge.pathDefinition = `M ${sx} ${sy} L ${sx} ${sy + sp.height} L ${sx - leftDelta} ${sy + sp.height} L ${sx - leftDelta} ${ey - ep.height} L ${ex} ${ey - ep.height} L ${ex} ${ey}`
+                edge.pathDefinition = `M ${sx} ${sy} L ${sx} ${sy + my} L ${ex} ${ey - my} L ${ex} ${ey}`
             }
         }
     }
