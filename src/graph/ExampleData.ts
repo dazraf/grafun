@@ -1,10 +1,11 @@
+import { generateRandomName } from "../names/NameGenerator"
 import { GraphDefinition } from "./Graph"
 
 export const exampleData: GraphDefinition = {
     nodes: [
         {
             id: "1",
-            label: "1",
+            label: generateRandomName(),
             inputs: [],
             outputs: [
                 {
@@ -15,7 +16,7 @@ export const exampleData: GraphDefinition = {
         },
         {
             id: "2",
-            label: "2",
+            label: generateRandomName(),
             inputs: [],
             outputs: [
                 {
@@ -26,7 +27,7 @@ export const exampleData: GraphDefinition = {
         },       
         {
             id: "3",
-            label: "3",
+            label: generateRandomName(),
             inputs: [
                 {
                     name: "input-1",
@@ -46,7 +47,7 @@ export const exampleData: GraphDefinition = {
         },       
         {
             id: "4",
-            label: "4",
+            label: generateRandomName(),
             inputs: [
                 {
                     name: "input-1",
@@ -66,7 +67,7 @@ export const exampleData: GraphDefinition = {
         },       
         {
             id: "5",
-            label: "5",
+            label: generateRandomName(),
             inputs: [
                 {
                     name: "input-1",
@@ -96,7 +97,7 @@ export const exampleData: GraphDefinition = {
                 nodeId: "3",
                 portName: "input-1" 
             },
-            label: "foo"
+            label: "data"
         },
         {
             from: {
@@ -107,7 +108,7 @@ export const exampleData: GraphDefinition = {
                 nodeId: "3",
                 portName: "input-2" 
             },
-            label: "bar"
+            label: generateRandomName()
         },
         {
             from: {
@@ -118,7 +119,7 @@ export const exampleData: GraphDefinition = {
                 nodeId: "4",
                 portName: "input-1" 
             },
-            label: "bar"
+            label: generateRandomName()
         },
         {
             from: {
@@ -129,7 +130,7 @@ export const exampleData: GraphDefinition = {
                 nodeId: "5",
                 portName: "input-1" 
             },
-            label: "bar"
+            label: generateRandomName()
         },
         {
             from: {
@@ -140,7 +141,7 @@ export const exampleData: GraphDefinition = {
                 nodeId: "5",
                 portName: "input-2" 
             },
-            label: "bar"
+            label: generateRandomName()
         },
         {
             from: {
@@ -151,7 +152,7 @@ export const exampleData: GraphDefinition = {
                 nodeId: "4",
                 portName: "input-2"
             },
-            label: "feedback"
+            label: generateRandomName()
         }
     ]
 }
