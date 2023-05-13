@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { LitElement, svg, css, html, PropertyValueMap } from "lit"
 import { customElement } from "lit/decorators.js"
-import { exampleData } from "./example-data"
-import { Graph, GraphEdgeImpl, GraphImpl, GraphNodeImpl, GraphPortImpl, PortType, buildGraph } from "./graph"
+import { exampleData } from "./ExampleData"
+import { GraphDefinition, GraphEdge, Graph, GraphNode, GraphPort, PortType, buildGraph } from "./Graph"
+import { CrappyLayout } from "./layouts/CrappyLayout"
+import { SugiyamaLayout } from "./layouts/SugiyamaLayout"
 
 
 interface PanState {
@@ -46,9 +48,9 @@ class GraphElement extends LitElement {
     }
     `;
 
-    private data: Graph = exampleData
+    private data: GraphDefinition = exampleData
     private panningState: PanState | undefined
-    private graph: GraphImpl = new GraphImpl()
+    private graph: Graph = new Graph()
 
     connectedCallback(): void {
         super.connectedCallback()
@@ -135,43 +137,10 @@ class GraphElement extends LitElement {
         this.graph.viewBox.y = 0;  
         this.graph.viewBox.width = this.host.clientWidth
         this.graph.viewBox.height = this.host.clientHeight
-
-        const orderedNodes = this.graph.nodes.sort(
-            (a, b) =>
-                (b.outputs.length - b.inputs.length) - (a.outputs.length - a.inputs.length))
-
-        orderedNodes.forEach((node, index) => {
-            node.layer = index
-            node.x = 100 + index * 50
-            node.y = 100 + index * (this.graph.nodeHeight + this.graph.portHeight + 100)
-        })
-
-        this.graph.edges.forEach(edge => {
-            if (edge.fromPort.portType != PortType.Output || edge.toPort.portType != PortType.Input) {
-                throw new Error(`Invalid edge: ${edge}`)
-            }
-            if (edge.fromPort.node.layer < edge.toPort.node.layer) {
-                const startPort = edge.fromPort
-                const endPort = edge.toPort
-                const sx = startPort.x + startPort.width / 2
-                const sy = startPort.y + startPort.height
-                const ex = endPort.x + startPort.width / 2
-                const ey = endPort.y
-                const my = (sy + ey) / 2
-                edge.pathDefinition = `M ${sx} ${sy} L ${sx} ${my} L ${ex} ${my} L ${ex} ${ey}`
-            } else {
-                const sp = edge.fromPort
-                const ep = edge.toPort
-                const sx = sp.x + sp.width / 2
-                const sy = sp.y + sp.height
-                const ex = ep.x + sp.width / 2
-                const ey = ep.y
-                const leftDelta = Math.max(sp.node.layer, ep.node.layer) * 50
-
-                edge.pathDefinition = `M ${sx} ${sy} L ${sx} ${sy + sp.height} L ${sx - leftDelta} ${sy + sp.height} L ${sx - leftDelta} ${ey - ep.height} L ${ex} ${ey - ep.height} L ${ex} ${ey}`
-            }
-
-        });
+        this.graph.portHeight = 7
+        this.graph.portWidth = 10
+        // new CrappyLayout().layout(this.graph)
+        new SugiyamaLayout().layout(this.graph)
     }
 
     private renderGraph() {
@@ -181,22 +150,22 @@ class GraphElement extends LitElement {
         `
     }
 
-    private renderNode(node: GraphNodeImpl) {
+    private renderNode(node: GraphNode) {
         return svg`
             <rect class="node" x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}"/>
-            <text class="node-label" x="${node.x + node.padding}" y="${node.y + node.height / 2}" text-anchor="start" dominant-baseline="middle">${node.text}</text>
+            <text class="node-label" x="${node.x + node.padding}" y="${node.y + node.height / 2}" text-anchor="start" dominant-baseline="middle">${node.label}</text>
             ${this.renderPorts(node)}
         `
     }
 
-    private renderPorts(node: GraphNodeImpl) {
+    private renderPorts(node: GraphNode) {
         return svg`
             ${node.inputs.map((input) => this.renderPort(input))}
             ${node.outputs.map((output) => this.renderPort(output))}
         `
     }
 
-    private renderPort(port: GraphPortImpl) {
+    private renderPort(port: GraphPort) {
         return svg`
             <rect   id="${port.id}" 
                     class="node-port" 
@@ -210,7 +179,7 @@ class GraphElement extends LitElement {
         `
     }
 
-    private renderEdge(edge: GraphEdgeImpl) {
+    private renderEdge(edge: GraphEdge) {
         const startPort = edge.fromPort
         return svg`
             <path class="edge" d="${edge.pathDefinition}" stroke-width="${startPort.width}">

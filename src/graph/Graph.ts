@@ -1,18 +1,18 @@
 
 
-export interface Graph {
-    nodes: GraphNode[]
-    edges: GraphEdge[]
+export interface GraphDefinition {
+    nodes: GraphNodeDefinition[]
+    edges: GraphEdgeDefinition[]
 }
 
-export interface GraphNode {
+export interface GraphNodeDefinition {
     id: string
-    text: string
-    inputs: GraphPort[]
-    outputs: GraphPort[]
+    label: string
+    inputs: GraphPortDefinition[]
+    outputs: GraphPortDefinition[]
 }
 
-export interface GraphPort {
+export interface GraphPortDefinition {
     name: string
     label?: string 
 }
@@ -22,19 +22,19 @@ export interface GraphPortRef {
     portName: string
 }
 
-export interface GraphEdge {
+export interface GraphEdgeDefinition {
     from: GraphPortRef
     to: GraphPortRef
     label: string
 }
 
-export function buildGraph(graph: Graph): GraphImpl {
-    return new GraphImpl(graph)
+export function buildGraph(graph: GraphDefinition): Graph {
+    return new Graph(graph)
 }
 
-export class GraphImpl implements Graph {
-    nodes: GraphNodeImpl[] = [];
-    edges: GraphEdgeImpl[] = [];
+export class Graph implements GraphDefinition {
+    nodes: GraphNode[] = [];
+    edges: GraphEdge[] = [];
     portHeight = 15;
     portWidth = 15;
     nodePadding = 10;
@@ -44,14 +44,14 @@ export class GraphImpl implements Graph {
     viewBox = DOMRect.fromRect({x: 0, y: 0, width: 0, height: 0})
     private _graphBounds?: DOMRect = undefined
 
-    constructor(graph: Graph | undefined = undefined) {
+    constructor(graph: GraphDefinition | undefined = undefined) {
         if (graph) {
-            this.nodes = graph.nodes.map(node => new GraphNodeImpl(node, this))
-            this.edges = graph.edges.map(edge => new GraphEdgeImpl(edge, this))
+            this.nodes = graph.nodes.map(node => new GraphNode(node, this))
+            this.edges = graph.edges.map(edge => new GraphEdge(edge, this))
         }
     }
 
-    findNode(id: string): GraphNodeImpl | undefined {
+    findNode(id: string): GraphNode | undefined {
         return this.nodes.find(node => node.id === id)
     }
 
@@ -71,23 +71,23 @@ export class GraphImpl implements Graph {
     }
 }
 
-export class GraphNodeImpl implements GraphNode {
+export class GraphNode implements GraphNodeDefinition {
     id: string
-    text: string
-    inputs: GraphPortImpl[]
-    outputs: GraphPortImpl[]
+    label: string
+    inputs: GraphPort[]
+    outputs: GraphPort[]
     x = 0
     y = 0
-    graph: GraphImpl
+    graph: Graph
     layer = 0
     #width: number | undefined
 
 
-    constructor(node: GraphNode, graph: GraphImpl) {
+    constructor(node: GraphNodeDefinition, graph: Graph) {
         this.id = node.id
-        this.text = node.text
-        this.inputs = node.inputs.map((input, index) => new GraphPortImpl(input, PortType.Input, index, this))
-        this.outputs = node.outputs.map((output, index) => new GraphPortImpl(output, PortType.Output, index, this))
+        this.label = node.label
+        this.inputs = node.inputs.map((input, index) => new GraphPort(input, PortType.Input, index, this))
+        this.outputs = node.outputs.map((output, index) => new GraphPort(output, PortType.Output, index, this))
         this.graph = graph
     }
 
@@ -103,16 +103,16 @@ export class GraphNodeImpl implements GraphNode {
         return this.#width ?? (this.#width = this.calculateWidth())
     }
 
-    getPort(portName: string): GraphPortImpl | undefined {
+    getPort(portName: string): GraphPort | undefined {
         return this.inputs.find(it => it.name == portName) ??
             this.outputs.find(it => it.name == portName)
     }
 
     private calculateWidth(): number {
-        const textWidth = (this.text.length * 10) + 2 * this.graph.nodePadding
+        const labelWidth = (this.label.length * 10) + 2 * this.graph.nodePadding
         const inputsWidth = (this.inputs.length * this.graph.portWidth) + (this.inputs.length - 1) * this.graph.portGap
         const outputsWidth = (this.outputs.length * this.graph.portWidth) + (this.inputs.length - 1) * this.graph.portGap
-        return Math.max(textWidth, inputsWidth, outputsWidth)
+        return Math.max(labelWidth, inputsWidth, outputsWidth)
     }
 
 }
@@ -121,14 +121,14 @@ export enum PortType {
     Input, Output
 }
 
-export class GraphPortImpl implements GraphPort {
+export class GraphPort implements GraphPortDefinition {
     name: string
     label: string
     portType: PortType
     index: number
-    node: GraphNodeImpl
+    node: GraphNode
 
-    constructor(port: GraphPort, portType: PortType, index: number, node: GraphNodeImpl) {
+    constructor(port: GraphPortDefinition, portType: PortType, index: number, node: GraphNode) {
         this.name = port.name
         this.label = port.label ?? this.name
         this.portType = portType
@@ -160,31 +160,31 @@ export class GraphPortImpl implements GraphPort {
     }
 }
 
-export class GraphEdgeImpl implements GraphEdge {
+export class GraphEdge implements GraphEdgeDefinition {
     from: GraphPortRef
     to: GraphPortRef
     label: string
-    graph: GraphImpl
+    graph: Graph
     pathDefinition = ""
-    #fromPort? : GraphPortImpl
-    #toPort? : GraphPortImpl
+    #fromPort? : GraphPort
+    #toPort? : GraphPort
 
-    constructor(edge: GraphEdge, graph: GraphImpl) {
+    constructor(edge: GraphEdgeDefinition, graph: Graph) {
         this.from = edge.from
         this.to = edge.to
         this.label = edge.label
         this.graph = graph
     }
 
-    get fromPort(): GraphPortImpl {
+    get fromPort(): GraphPort {
         return this.#fromPort ?? (this.#fromPort = this.findPort(this.from));
     }
 
-    get toPort(): GraphPortImpl {
+    get toPort(): GraphPort {
         return this.#toPort ?? (this.#toPort = this.findPort(this.to));
     }
 
-    private findPort(portRef: GraphPortRef): GraphPortImpl {
+    private findPort(portRef: GraphPortRef): GraphPort {
         const port = this.graph.findNode(portRef.nodeId)?.getPort(portRef.portName)    
         if (port === undefined) {
             throw new Error(`Unable to find 'from' port ${portRef.nodeId}.${portRef.portName}`)
