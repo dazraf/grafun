@@ -156,9 +156,6 @@ const right = [
 		// Laura Bassi, the world's first female professor https://en.wikipedia.org/wiki/Laura_Bassi
 		"bassi",
 
-		// Hugh Beaver, British engineer, founder of the Guinness Book of World Records https://en.wikipedia.org/wiki/Hugh_Beaver
-		"beaver",
-
 		// Alexander Graham Bell - an eminent Scottish-born scientist, inventor, engineer and innovator who is credited with inventing the first practical telephone - https://en.wikipedia.org/wiki/Alexander_Graham_Bell
 		"bell",
 
