@@ -1,0 +1,254 @@
+{
+    "nodes": [
+        {
+            "id": "0",
+            "label": "youthful kirch",
+            "inputs": [
+                {
+                    "name": "input-0",
+                    "label": "upbeat wright"
+                },
+                {
+                    "name": "input-1",
+                    "label": "distracted mcnulty"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output-0",
+                    "label": "eager curie"
+                }
+            ]
+        },
+        {
+            "id": "1",
+            "label": "frosty chatterjee",
+            "inputs": [
+                {
+                    "name": "input-0",
+                    "label": "adoring sinoussi"
+                },
+                {
+                    "name": "input-1",
+                    "label": "unruffled visvesvaraya"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output-0",
+                    "label": "condescending vaughan"
+                }
+            ]
+        },
+        {
+            "id": "2",
+            "label": "stoic leakey",
+            "inputs": [
+                {
+                    "name": "input-0",
+                    "label": "awesome bassi"
+                },
+                {
+                    "name": "input-1",
+                    "label": "elated archimedes"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output-0",
+                    "label": "festive brahmagupta"
+                }
+            ]
+        },
+        {
+            "id": "3",
+            "label": "elegant mendel",
+            "inputs": [
+                {
+                    "name": "input-0",
+                    "label": "fervent shtern"
+                },
+                {
+                    "name": "input-1",
+                    "label": "upbeat aryabhata"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output-0",
+                    "label": "reverent carson"
+                }
+            ]
+        },
+        {
+            "id": "4",
+            "label": "quirky merkle",
+            "inputs": [
+                {
+                    "name": "input-0",
+                    "label": "pedantic kirch"
+                },
+                {
+                    "name": "input-1",
+                    "label": "bold gagarin"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output-0",
+                    "label": "fervent kare"
+                }
+            ]
+        },
+        {
+            "id": "5",
+            "label": "peaceful mclean",
+            "inputs": [
+                {
+                    "name": "input-0",
+                    "label": "thirsty borg"
+                },
+                {
+                    "name": "input-1",
+                    "label": "nice lewin"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output-0",
+                    "label": "jovial benz"
+                }
+            ]
+        },
+        {
+            "id": "6",
+            "label": "gifted vaughan",
+            "inputs": [
+                {
+                    "name": "input-0",
+                    "label": "jovial kilby"
+                },
+                {
+                    "name": "input-1",
+                    "label": "heuristic saha"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output-0",
+                    "label": "amazing bouman"
+                }
+            ]
+        },
+        {
+            "id": "7",
+            "label": "blissful jepsen",
+            "inputs": [
+                {
+                    "name": "input-0",
+                    "label": "silly pare"
+                },
+                {
+                    "name": "input-1",
+                    "label": "blissful borg"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output-0",
+                    "label": "inspiring brahmagupta"
+                }
+            ]
+        }
+    ],
+    "edges": [
+        {
+            "label": "strange germain",
+            "from": {
+                "nodeId": "5",
+                "portName": "output-0"
+            },
+            "to": {
+                "nodeId": "7",
+                "portName": "input-0"
+            }
+        },
+        {
+            "label": "ecstatic newton",
+            "from": {
+                "nodeId": "4",
+                "portName": "output-0"
+            },
+            "to": {
+                "nodeId": "2",
+                "portName": "input-0"
+            }
+        },
+        {
+            "label": "quizzical dirac",
+            "from": {
+                "nodeId": "6",
+                "portName": "output-0"
+            },
+            "to": {
+                "nodeId": "6",
+                "portName": "input-0"
+            }
+        },
+        {
+            "label": "epic taussig",
+            "from": {
+                "nodeId": "1",
+                "portName": "output-0"
+            },
+            "to": {
+                "nodeId": "1",
+                "portName": "input-1"
+            }
+        },
+        {
+            "label": "charming merkle",
+            "from": {
+                "nodeId": "0",
+                "portName": "output-0"
+            },
+            "to": {
+                "nodeId": "3",
+                "portName": "input-0"
+            }
+        },
+        {
+            "label": "friendly dewdney",
+            "from": {
+                "nodeId": "2",
+                "portName": "output-0"
+            },
+            "to": {
+                "nodeId": "3",
+                "portName": "input-1"
+            }
+        },
+        {
+            "label": "gallant noether",
+            "from": {
+                "nodeId": "3",
+                "portName": "output-0"
+            },
+            "to": {
+                "nodeId": "5",
+                "portName": "input-1"
+            }
+        },
+        {
+            "label": "affectionate gauss",
+            "from": {
+                "nodeId": "7",
+                "portName": "output-0"
+            },
+            "to": {
+                "nodeId": "6",
+                "portName": "input-1"
+            }
+        }
+    ]
+}
