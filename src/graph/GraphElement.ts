@@ -5,6 +5,7 @@ import { GraphEdge, Graph, GraphNode, GraphPort } from "./Graph"
 import { SugiyamaLayout } from "./layouts/SugiyamaLayout"
 import { GraphDataProvider } from "./data/GraphDefinitionProvider"
 import { RandomGraphGenerator } from "./data/RandomGraphGenerator"
+import { FileGraphDataProvider } from "./data/FileGraphDataProvider"
 
 
 interface PanState {
@@ -48,8 +49,9 @@ class GraphElement extends LitElement {
     }
     `;
 
-    @state() 
-    dataProvider: GraphDataProvider = new RandomGraphGenerator(8)
+    @state()
+    dataProvider: GraphDataProvider = new RandomGraphGenerator(15)
+    // dataProvider: GraphDataProvider = new FileGraphDataProvider();
 
     private panningState: PanState | undefined
     private graph: Graph = new Graph()
@@ -57,6 +59,7 @@ class GraphElement extends LitElement {
     connectedCallback(): void {
         super.connectedCallback()
         this.layoutGraph()
+        console.log(this.dataProvider.data)
         console.log(this.graph)
     }
 
@@ -79,7 +82,7 @@ class GraphElement extends LitElement {
         svg.addEventListener('mousedown', e => { this.onMouseDown(e) })
         svg.addEventListener('mouseup', e => { this.onMouseUp(e) })
         svg.addEventListener('mousemove', e => { this.onMouseMove(e) })
-        svg.addEventListener('click', e => { this.onInputClick(e) })
+        svg.addEventListener('click', e => { this.onSvgClick(e) })
     }
 
     private onWheel(e: WheelEvent) {
@@ -93,7 +96,7 @@ class GraphElement extends LitElement {
         this.graph.viewBox.y -= (newStartPoint.y - this.graph.viewBox.y) * (scalingFactor - 1)
         this.graph.viewBox.width *= scalingFactor
         this.graph.viewBox.height *= scalingFactor
-        this.requestUpdate();
+        this.requestUpdate()
     }
 
     private onMouseDown(e: MouseEvent) {
@@ -103,7 +106,7 @@ class GraphElement extends LitElement {
             cx: e.clientX,
             cy: e.clientY,
             viewBoxOrigin: this.svgPoint(this.graph.viewBox.x, this.graph.viewBox.y)
-        } 
+        }
     }
 
     private onMouseUp(e: MouseEvent) {
@@ -127,26 +130,30 @@ class GraphElement extends LitElement {
         this.requestUpdate()
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
-    private onInputClick(_event: MouseEvent) {
+    private onSvgClick(event: MouseEvent) {
+        const target = event.target
+        if (!target || !(target instanceof SVGPathElement)) return
+        const edge = this.graph.edges.find(edge => edge.id == target.id)
+        if (!edge) return
+        console.log(edge.pathDefinition)
     }
-    
+
 
     private layoutGraph() {
         this.graph = Graph.buildGraph(this.dataProvider.data)
-        this.graph.viewBox.x = 0;
-        this.graph.viewBox.y = 0;  
+        this.graph.viewBox.x = 0
+        this.graph.viewBox.y = 0
         this.graph.viewBox.width = this.host.clientWidth
         this.graph.viewBox.height = this.host.clientHeight
         this.graph.portHeight = 7
-        this.graph.portWidth = 10
+        this.graph.portWidth = 7
         this.graph.portGap = 20
         // new CrappyLayout().layout(this.graph)
         new SugiyamaLayout(50).layout(this.graph)
         this.graph.viewBox.x = this.graph.graphBounds.x - 50
         this.graph.viewBox.y = this.graph.graphBounds.y - 50
         this.graph.viewBox.width = this.graph.graphBounds.width + 100
-        this.graph.viewBox.height = this.graph.graphBounds.height + 100   
+        this.graph.viewBox.height = this.graph.graphBounds.height + 100
     }
 
     private renderGraph() {
@@ -188,7 +195,7 @@ class GraphElement extends LitElement {
     private renderEdge(edge: GraphEdge) {
         const startPort = edge.fromPort
         return svg`
-            <path class="edge" d="${edge.pathDefinition}" stroke-width="${startPort.width}">
+            <path id=${edge.id} class="edge" d="${edge.pathDefinition}" stroke-width="${startPort.width}">
                 <title>${edge.label}</title>
             </path>
         `

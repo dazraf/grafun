@@ -24,4 +24,5 @@ export interface GraphEdgeDefinition {
     from: GraphPortRef
     to: GraphPortRef
     label: string
+    id?: string
 }

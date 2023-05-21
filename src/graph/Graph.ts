@@ -139,6 +139,7 @@ export class GraphEdge implements GraphEdgeDefinition {
     label: string
     graph: Graph
     pathDefinition = ""
+    #id?: string | undefined
     #fromPort? : GraphPort
     #toPort? : GraphPort
 
@@ -147,16 +148,31 @@ export class GraphEdge implements GraphEdgeDefinition {
         this.to = edge.to
         this.label = edge.label
         this.graph = graph
+        this.#id = edge.id
     }
 
     get fromPort(): GraphPort {
         return this.#fromPort ?? (this.#fromPort = this.findPort(this.from));
     }
 
+    set fromPort(port: GraphPort) {
+        this.#fromPort = port
+        this.from = {nodeId: port.node.id, portName: port.name}
+    }
+
     get toPort(): GraphPort {
         return this.#toPort ?? (this.#toPort = this.findPort(this.to));
     }
 
+    set toPort(port: GraphPort) {
+        this.#toPort = port
+        this.to = {nodeId: port.node.id, portName: port.name}
+    }
+    
+    get id(): string {
+        return this.#id ?? (this.#id = `${this.from.nodeId}.${this.from.portName}->${this.to.nodeId}.${this.to.portName}`)
+    }
+    
     private findPort(portRef: GraphPortRef): GraphPort {
         const port = this.graph.findNode(portRef.nodeId)?.getPort(portRef.portName)    
         if (port === undefined) {
