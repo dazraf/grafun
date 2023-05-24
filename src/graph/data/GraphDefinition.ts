@@ -5,7 +5,7 @@ export interface GraphDefinition {
 
 export interface GraphNodeDefinition {
     id: string
-    label: string
+    label?: string
     inputs: GraphPortDefinition[]
     outputs: GraphPortDefinition[]
 }
@@ -23,6 +23,6 @@ export interface GraphPortRef {
 export interface GraphEdgeDefinition {
     from: GraphPortRef
     to: GraphPortRef
-    label: string
+    label?: string
     id?: string
 }

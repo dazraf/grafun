@@ -11,155 +11,113 @@ export class ExampleDataProvider implements GraphDataProvider {
 const exampleData: GraphDefinition = {
     nodes: [
         {
-            id: "1",
-            label: generateRandomName(),
+            id: "a",
             inputs: [],
             outputs: [
                 {
-                    name: "output-1",
-                    label: "lhs"
-                }
-            ],
-        },
-        {
-            id: "2",
-            label: generateRandomName(),
-            inputs: [],
-            outputs: [
+                    name: "o1"
+                },
                 {
-                    name: "output-1",
-                    label: "rhs"
+                    name: "o2"
                 }
             ],
-        },       
+        },   
         {
-            id: "3",
-            label: generateRandomName(),
+            id: "b",
             inputs: [
                 {
-                    name: "input-1",
-                    label: "lhs"
+                    name: "i1"
                 },
                 {
-                    name: "input-2",
-                    label: "rhs"
+                    name: "i2"
                 }
             ],
             outputs: [
                 {
-                    name: "output-1",
-                    label: "output"
-                },
-            ],
-        },       
+                    name: "o1"
+                }
+            ]
+        },   
         {
-            id: "4",
-            label: generateRandomName(),
+            id: "c",
             inputs: [
                 {
-                    name: "input-1",
-                    label: "lhs"
-                },
-                {
-                    name: "input-2",
-                    label: "rhs"
-                },
+                    name: "i1"
+                }
             ],
             outputs: [
                 {
-                    name: "output-1",
-                    label: "rhs"
+                    name: "o1"
+                },
+                {
+                    name: "o2"
                 }
-            ],
-        },       
+            ]
+        },   
         {
-            id: "5",
-            label: generateRandomName(),
+            id: "d",
             inputs: [
                 {
-                    name: "input-1",
-                    label: "lhs"
+                    name: "i1"
                 },
                 {
-                    name: "input-2",
-                    label: "rhs"
-                },
-            ],
-            outputs: [
-                {
-                    name: "output-1",
-                    label: "output"
+                    name: "i2"
                 }
             ],
-        },       
-
+            outputs: [
+            ]
+        }
     ],
     edges: [
         {
             from: {
-                nodeId: "1",
-                portName: "output-1"
+                nodeId: "a",
+                portName: "o1"
             },
             to: {
-                nodeId: "3",
-                portName: "input-1" 
-            },
-            label: "data"
+                nodeId: "b",
+                portName: "i1" 
+            }
         },
         {
             from: {
-                nodeId: "2",
-                portName: "output-1"
+                nodeId: "a",
+                portName: "o2"
             },
             to: {
-                nodeId: "3",
-                portName: "input-2" 
-            },
-            label: generateRandomName()
+                nodeId: "c",
+                portName: "i1" 
+            }
         },
         {
             from: {
-                nodeId: "1",
-                portName: "output-1"
+                nodeId: "b",
+                portName: "o1"
             },
             to: {
-                nodeId: "4",
-                portName: "input-1" 
-            },
-            label: generateRandomName()
+                nodeId: "d",
+                portName: "i1"
+            }
         },
         {
             from: {
-                nodeId: "3",
-                portName: "output-1"
-            },
+                nodeId: "c",
+                portName: "o1"
+            }, 
             to: {
-                nodeId: "5",
-                portName: "input-1" 
-            },
-            label: generateRandomName()
+                nodeId: "b",
+                portName: "i2"
+            }
         },
         {
             from: {
-                nodeId: "4",
-                portName: "output-1"
-            },
+                nodeId: "c",
+                portName: "o2"
+            }, 
             to: {
-                nodeId: "5",
-                portName: "input-2" 
-            },
-            label: generateRandomName()
-        },
-        {
-            from: {
-                nodeId: "5",
-                portName: "output-1"
-            },
-            to: {
-                nodeId: "4",
-                portName: "input-2"
-            },
-            label: generateRandomName()
+                nodeId: "d",
+                portName: "i2"
+            }
         }
-    ]
+   ]
 }

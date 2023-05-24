@@ -6,6 +6,7 @@ import { SugiyamaLayout } from "./layouts/SugiyamaLayout"
 import { GraphDataProvider } from "./data/GraphDefinitionProvider"
 import { RandomGraphGenerator } from "./data/RandomGraphGenerator"
 import { FileGraphDataProvider } from "./data/FileGraphDataProvider"
+import { ExampleDataProvider } from "./data/ExampleData"
 
 
 interface PanState {
@@ -28,7 +29,7 @@ class GraphElement extends LitElement {
         viewBox: 0 0 100% 100%;
     }
     .node {
-        fill: rgb(52, 52, 52);
+        fill: rgb(52, 52, 52, 0.5);
     }
     .node-label {
         fill: rgb(192, 224, 77);
@@ -44,15 +45,26 @@ class GraphElement extends LitElement {
         stroke-linecap: butt;
         stroke-linejoin: round;
     }
+    @keyframes lineMove {
+        0% {
+            stroke-dashoffset: 100%;
+        }
+        
+        100% {
+            stroke-dashoffset: 0%;
+        }
+        }
     .edge:hover {
         stroke: rgba(73, 137, 121, 1.0);
+        stroke-dasharray: 10, 2;
+        animation: lineMove 100s linear infinite;
     }
     `;
 
     @state()
-    dataProvider: GraphDataProvider = new RandomGraphGenerator(15)
-    // dataProvider: GraphDataProvider = new FileGraphDataProvider();
-
+    dataProvider = new RandomGraphGenerator(9)
+    // dataProvider = new FileGraphDataProvider();
+    // dataProvider = new ExampleDataProvider()
     private panningState: PanState | undefined
     private graph: Graph = new Graph()
 
@@ -145,8 +157,8 @@ class GraphElement extends LitElement {
         this.graph.viewBox.y = 0
         this.graph.viewBox.width = this.host.clientWidth
         this.graph.viewBox.height = this.host.clientHeight
-        this.graph.portHeight = 7
-        this.graph.portWidth = 7
+        this.graph.portHeight = 8
+        this.graph.portWidth = 8
         this.graph.portGap = 20
         // new CrappyLayout().layout(this.graph)
         new SugiyamaLayout(50).layout(this.graph)
@@ -195,7 +207,7 @@ class GraphElement extends LitElement {
     private renderEdge(edge: GraphEdge) {
         const startPort = edge.fromPort
         return svg`
-            <path id=${edge.id} class="edge" d="${edge.pathDefinition}" stroke-width="${startPort.width}">
+            <path id=${edge.id} class="edge" d="${edge.pathDefinition}" stroke-width="${startPort.node.graph.edgeWidth}">
                 <title>${edge.label}</title>
             </path>
         `

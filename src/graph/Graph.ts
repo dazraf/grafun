@@ -8,6 +8,7 @@ export class Graph implements GraphDefinition {
     nodePadding = 10;
     nodeHeight = 40;
     portGap = 5;
+    edgeWidth = 4;
     get totalPortWidth() { return this.portWidth + this.portGap; }
     
     viewBox = DOMRect.fromRect({x: 0, y: 0, width: 0, height: 0})
@@ -58,7 +59,7 @@ export class GraphNode implements GraphNodeDefinition {
 
     constructor(node: GraphNodeDefinition, graph: Graph) {
         this.id = node.id
-        this.label = node.label
+        this.label = node.label ?? node.id
         this.inputs = node.inputs.map((input, index) => new GraphPort(input, PortType.Input, index, this))
         this.outputs = node.outputs.map((output, index) => new GraphPort(output, PortType.Output, index, this))
         this.graph = graph
@@ -82,10 +83,10 @@ export class GraphNode implements GraphNodeDefinition {
     }
 
     private calculateWidth(): number {
-        const labelWidth = (this.label.length * 10) + 2 * this.graph.nodePadding
+        const labelWidth = (this.label.length * 10)
         const inputsWidth = (this.inputs.length * this.graph.portWidth) + (this.inputs.length - 1) * this.graph.portGap
-        const outputsWidth = (this.outputs.length * this.graph.portWidth) + (this.inputs.length - 1) * this.graph.portGap
-        return Math.max(labelWidth, inputsWidth, outputsWidth)
+        const outputsWidth = (this.outputs.length * this.graph.portWidth) + (this.outputs.length - 1) * this.graph.portGap
+        return Math.max(labelWidth, inputsWidth, outputsWidth) + 2 * this.graph.nodePadding
     }
 
 }
@@ -113,14 +114,14 @@ export class GraphPort implements GraphPortDefinition {
         return `${this.node.id}.${this.name}`
     }
     get x(): number {
-        return this.node.x + this.index * this.node.graph.totalPortWidth
+        return this.node.x + this.node.padding + this.index * this.node.graph.totalPortWidth
     }
 
     get y(): number {
         if (this.portType === PortType.Input) {
-            return this.node.y - this.node.graph.portHeight
+            return this.node.y - this.node.graph.portHeight + this.node.graph.portHeight
         } else {
-            return this.node.y + this.node.graph.nodeHeight
+            return this.node.y + this.node.graph.nodeHeight - this.node.graph.portHeight
         }
     }
 
@@ -146,7 +147,7 @@ export class GraphEdge implements GraphEdgeDefinition {
     constructor(edge: GraphEdgeDefinition, graph: Graph) {
         this.from = edge.from
         this.to = edge.to
-        this.label = edge.label
+        this.label = edge.label ?? ""
         this.graph = graph
         this.#id = edge.id
     }
