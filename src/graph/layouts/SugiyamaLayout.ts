@@ -1,19 +1,24 @@
 import { GraphLayout } from "./GraphLayout"
 import { Graph, GraphEdge, GraphNode } from "../Graph"
+import { v4 as uuid4 } from "uuid"
 
 export class SugiyamaLayout implements GraphLayout {
     constructor(public nodeSpacing: number, public layerSpacing: number = 100) {
     }
     private reversedEdges: GraphEdge[] = [];
+    private removedEdges: GraphEdge[] = [];
+    private temporaryNodes: GraphNode[] = [];
 
     layout(graph: Graph): void {
         this.breakCycles(graph)
         this.assignLayers(graph)
+        this.insertTemporaryLayerNodes(graph)
         this.orderNodesWithinLayers(graph)
         this.calculateNodePositions(graph)
         this.centreLayers(graph)
         this.calculateEdgePaths(graph)
         this.restoreCycles()
+        this.removeTemporaryLayerNodes(graph)
     }
 
     private assignLayers(graph: Graph): void {
@@ -21,14 +26,80 @@ export class SugiyamaLayout implements GraphLayout {
         for (const node of graph.nodes) {
             node.layer = this.calculateLayer(graph, node)
         }
-
         this.removeLayerConflicts(graph)
+    }
+
+    private insertTemporaryLayerNodes(graph: Graph): void {
+        // Inserts temporary nodes into the graph to break cycles
+        for (const edge of graph.edges) {
+            // iterate over the layers in between the two nodes of the edge and create a new node per layer linking 
+            // the two nodes together in a chain
+            let lastEdge = edge
+            
+            for (let i = edge.fromPort.node.layer + 1; i < edge.toPort.node.layer; ++i) {
+                const temporaryNode = graph.addNode({
+                    id: uuid4(),
+                    label: "",
+                    inputs: [
+                        {
+                            name: "in",
+                        }
+                    ],
+                    outputs: [
+                        {
+                            name: "out"
+                        }
+                    ],
+                })
+                temporaryNode.width = lastEdge.fromPort.node.width
+
+                temporaryNode.layer = i
+                this.temporaryNodes.push(temporaryNode)
+                graph.addEdge({
+                    from: {
+                        nodeId: lastEdge.from.nodeId,
+                        portName: lastEdge.from.portName
+                    }, 
+                    to: {
+                        nodeId: temporaryNode.id,
+                        portName: "in"
+                    },
+                    metadata: {
+                        isTemporary: true
+                    }
+                })
+                if (!lastEdge.metadata.isTemporary) {
+                    this.removedEdges.push(lastEdge)
+                }
+                graph.removeEdge(lastEdge)
+    
+                lastEdge = graph.addEdge({
+                    from: {
+                        nodeId: temporaryNode.id,
+                        portName: "out"
+                    },
+                    to: {
+                        nodeId: lastEdge.to.nodeId,
+                        portName: lastEdge.to.portName
+                    },
+                    metadata: {
+                        isTemporary: true
+                    }
+                })
+            }                 
+        }
+    }
+
+    private removeTemporaryLayerNodes(graph: Graph): void {
+        // Removes the temporary nodes and edges from the graph
+        this.temporaryNodes.forEach(node => graph.removeNode(node))
+        this.temporaryNodes.length = 0
+        this.removedEdges.forEach(edge => graph.addEdge(edge))
     }
 
     private removeLayerConflicts(graph: Graph) {
         let hasChanged = true
         for (let i = 0; i < 10 && hasChanged; ++i) {
-            console.log(`checking for layer conflicts ${i}}`)
             hasChanged = false
             for (const edge of graph.edges) {
                 if (edge.from.nodeId == edge.to.nodeId)
@@ -58,10 +129,13 @@ export class SugiyamaLayout implements GraphLayout {
     private orderNodesWithinLayers(graph: Graph): void {
         // Orders nodes within each layer to minimize edge crossings
         // Using a simple barycenter heuristic here; more complex heuristics may yield better results
-        for (let layer = 0; layer <= Math.max(...graph.nodes.map(node => node.layer)); layer++) {
+        const layerCount = Math.max(...graph.nodes.map(node => node.layer))
+        for (let layer = 0; layer <= layerCount; layer++) {
             const layerNodes = graph.nodes.filter(node => node.layer === layer)
             layerNodes.sort((nodeA, nodeB) => this.calculateBarycenter(graph, nodeA) - this.calculateBarycenter(graph, nodeB))
         }
+        
+        this.minimiseCrossings(graph)
     }
 
     private calculateBarycenter(graph: Graph, node: GraphNode): number {
@@ -70,13 +144,13 @@ export class SugiyamaLayout implements GraphLayout {
         let count = 0
         for (const edge of node.inputs.map(input => graph.edges.find(edge => edge.to.nodeId === input.node.id && edge.to.portName === input.name))) {
             if (edge) {
-                sum += edge.fromPort.x
-                count++
-                // const fromNode = graph.findNode(edge.from.nodeId)
-                // if (fromNode) {
-                //     sum += fromNode.x + fromNode.width / 2
-                //     count++
-                // }
+                // sum += edge.fromPort.x
+                // count++
+                const fromNode = graph.findNode(edge.from.nodeId)
+                if (fromNode) {
+                    sum += fromNode.x + fromNode.width / 2
+                    count++
+                }
             }
         }
         return count > 0 ? sum / count : 0
@@ -111,7 +185,6 @@ export class SugiyamaLayout implements GraphLayout {
             M ${sx} ${sy}
             C ${sx} ${sy + dy / 2 }, ${ex} ${ey - dy / 2 }, ${ex} ${ey}
             `
-
         }
     }
 
@@ -207,4 +280,95 @@ export class SugiyamaLayout implements GraphLayout {
 
         this.reversedEdges = []
     }
+    minimiseCrossings(graph: Graph) {
+        // group all nodes by layers
+        const layersAndNodes: GraphNode[][] = []
+        for (const node of graph.nodes) {
+            if (layersAndNodes[node.layer] === undefined) {
+                layersAndNodes[node.layer] = []
+            }
+            layersAndNodes[node.layer].push(node)
+        }
+        // iterate over layers
+        const MAX_ITERATIONS = 20
+        for (let i = 0; i < MAX_ITERATIONS; i++) {
+            let totalFlips = 0
+            for (let layer = 0; layer <= Math.max(...graph.nodes.map(node => node.layer)); layer++) {
+                totalFlips += this.minimiseLayerCrossings(graph, layersAndNodes, layer)
+            }
+            if (totalFlips === 0) {
+                break
+            }
+        }
+        graph.nodes = layersAndNodes.flatMap(layer => layer)
+    }
+
+    minimiseLayerCrossings(graph: Graph, layersAndNodes: GraphNode[][], layer: number): number {
+        const flipNodes: GraphNode[][] = []
+        const uniqueFlips = new Set<string>()
+
+        const edges = graph.edges.filter(edge => edge.fromPort.node.layer === layer || edge.toPort.node.layer === layer)
+        for (let i = 0; i < edges.length; i++) {
+            for (let j = i + 1; j < edges.length; j++) {
+                const e1 = edges[i]
+                const e2 = edges[j]
+                let minE1Node: GraphNode 
+                let maxE1Node: GraphNode
+                let minE2Node: GraphNode
+                let maxE2Node: GraphNode
+
+                if (e1.fromPort.node.layer < e1.toPort.node.layer) {
+                    minE1Node = e1.fromPort.node
+                    maxE1Node = e1.toPort.node
+                } else {
+                    minE1Node = e1.toPort.node
+                    maxE1Node = e1.fromPort.node
+                }
+                if (e2.fromPort.node.layer < e2.toPort.node.layer) {
+                    minE2Node = e2.fromPort.node
+                    maxE2Node = e2.toPort.node
+                } else {
+                    minE2Node = e2.toPort.node
+                    maxE2Node = e2.fromPort.node
+                }
+                // we only consider edges that are joining across the same two layers
+                if (minE1Node.layer != minE2Node.layer || maxE1Node.layer != maxE2Node.layer) {
+                    continue
+                }
+                const minLayerNodes = layersAndNodes[minE1Node.layer]
+                const maxLayerNodes = layersAndNodes[maxE1Node.layer]
+
+                const minE1NodeIndex = minLayerNodes.indexOf(minE1Node)
+                const maxE1NodeIndex = maxLayerNodes.indexOf(maxE1Node)
+                const minE2NodeIndex = minLayerNodes.indexOf(minE2Node)
+                const maxE2NodeIndex = maxLayerNodes.indexOf(maxE2Node)
+
+                let flipPair: GraphNode[]
+                if ((minE1NodeIndex > maxE1NodeIndex && minE2NodeIndex < maxE2NodeIndex) ||
+                    (minE1NodeIndex < maxE1NodeIndex && minE2NodeIndex > maxE2NodeIndex) ) {
+                    if (minE1Node.layer === layer) {
+                        flipPair = [minE1Node, minE2Node]
+                    } else {
+                        flipPair = [maxE1Node, maxE2Node]
+                    }
+                    const key = flipPair.map(it => it.id).sort().join('-')
+                    if (!uniqueFlips.has(key)) {
+                        uniqueFlips.add(key)
+                        flipNodes.push(flipPair)
+                    }
+                }
+            }
+        }
+
+        flipNodes.forEach(flipIt => {
+            const [left, right] = flipIt
+            const leftIndex = layersAndNodes[layer].findIndex(node => node.id === left.id)
+            const rightIndex = layersAndNodes[layer].findIndex(node => node.id === right.id)
+            const temp = layersAndNodes[layer][leftIndex]
+            layersAndNodes[layer][leftIndex] = layersAndNodes[layer][rightIndex]
+            layersAndNodes[layer][rightIndex] = temp
+        })    
+        return flipNodes.length            
+    }
 }
+
