@@ -62,7 +62,7 @@ class GraphElement extends LitElement {
     `;
 
     @state()
-    dataProvider = new RandomGraphGenerator(9)
+    dataProvider = new RandomGraphGenerator(20)
     // dataProvider = new FileGraphDataProvider();
     // dataProvider = new ExampleDataProvider()
     private panningState: PanState | undefined
