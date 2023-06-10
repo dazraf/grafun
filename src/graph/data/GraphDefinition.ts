@@ -3,7 +3,11 @@ export interface GraphDefinition {
     edges: GraphEdgeDefinition[]
 }
 
-export interface GraphNodeDefinition {
+export interface HasMetadata {
+    metadata?: { [key: string]: string | boolean | number }
+}
+
+export interface GraphNodeDefinition extends HasMetadata {
     id: string
     label?: string
     inputs: GraphPortDefinition[]
@@ -20,9 +24,9 @@ export interface GraphPortRef {
     portName: string
 }
 
-export interface GraphEdgeDefinition {
+export interface GraphEdgeDefinition extends HasMetadata {
     from: GraphPortRef
     to: GraphPortRef
     label?: string
-    id?: string
+    id?: string,
 }
