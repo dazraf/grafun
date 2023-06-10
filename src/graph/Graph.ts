@@ -36,6 +36,27 @@ export class Graph implements GraphDefinition {
         return `${this.viewBox.x} ${this.viewBox.y} ${this.viewBox.width} ${this.viewBox.height}`
     }
 
+    addNode(nodeDefinition: GraphNodeDefinition): GraphNode {
+        const node = new GraphNode(nodeDefinition, this)
+        this.nodes.push(node)
+        return node
+    }
+
+    removeNode(node: GraphNode) {
+        this.nodes = this.nodes.filter(n => n !== node)
+        this.edges = this.edges.filter(edge => edge.fromPort.node !== node && edge.toPort.node !== node)  
+    }
+
+    addEdge(edgeDefinition: GraphEdgeDefinition): GraphEdge {
+        const edge = new GraphEdge(edgeDefinition, this)
+        this.edges.push(edge)
+        return edge
+    }
+
+    removeEdge(edge: GraphEdge) {
+        this.edges = this.edges.filter(e => e !== edge)
+    }
+
     private calculateGraphBounds(): DOMRect {
         const minX = Math.min(...this.nodes.map(node => node.x))
         const minY = Math.min(...this.nodes.map(node => node.y))
@@ -52,6 +73,7 @@ export class GraphNode implements GraphNodeDefinition {
     outputs: GraphPort[]
     x = 0
     y = 0
+    metadata: { [key: string]: string | boolean | number } = {}
     graph: Graph
     layer = 0
     #width: number | undefined
@@ -63,6 +85,7 @@ export class GraphNode implements GraphNodeDefinition {
         this.inputs = node.inputs.map((input, index) => new GraphPort(input, PortType.Input, index, this))
         this.outputs = node.outputs.map((output, index) => new GraphPort(output, PortType.Output, index, this))
         this.graph = graph
+        this.metadata = node.metadata ?? {}
     }
 
     get padding(): number {
@@ -77,6 +100,10 @@ export class GraphNode implements GraphNodeDefinition {
         return this.#width ?? (this.#width = this.calculateWidth())
     }
 
+    set width(width: number) {
+        this.#width = width
+    }
+
     getPort(portName: string): GraphPort | undefined {
         return this.inputs.find(it => it.name == portName) ??
             this.outputs.find(it => it.name == portName)
@@ -88,7 +115,6 @@ export class GraphNode implements GraphNodeDefinition {
         const outputsWidth = (this.outputs.length * this.graph.portWidth) + (this.outputs.length - 1) * this.graph.portGap
         return Math.max(labelWidth, inputsWidth, outputsWidth) + 2 * this.graph.nodePadding
     }
-
 }
 
 export enum PortType {
@@ -143,6 +169,7 @@ export class GraphEdge implements GraphEdgeDefinition {
     #id?: string | undefined
     #fromPort? : GraphPort
     #toPort? : GraphPort
+    metadata: { [key: string]: string | boolean | number } = {}
 
     constructor(edge: GraphEdgeDefinition, graph: Graph) {
         this.from = edge.from
@@ -150,6 +177,7 @@ export class GraphEdge implements GraphEdgeDefinition {
         this.label = edge.label ?? ""
         this.graph = graph
         this.#id = edge.id
+        this.metadata = edge.metadata ?? {}
     }
 
     get fromPort(): GraphPort {
