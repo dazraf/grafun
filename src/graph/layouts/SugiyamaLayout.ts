@@ -3,7 +3,7 @@ import { Graph, GraphEdge, GraphNode } from "../Graph"
 import { v4 as uuid4 } from "uuid"
 
 export class SugiyamaLayout implements GraphLayout {
-    constructor(public nodeSpacing: number, public layerSpacing: number = 100) {
+    constructor(public nodeSpacing: number, public layerSpacing: number = 100, public enableMinimiseCrossings = true) {
     }
     private reversedEdges: GraphEdge[] = [];
     private removedEdges: GraphEdge[] = [];
@@ -18,7 +18,7 @@ export class SugiyamaLayout implements GraphLayout {
         this.centreLayers(graph)
         this.calculateEdgePaths(graph)
         this.restoreCycles()
-        this.removeTemporaryLayerNodes(graph)
+        // this.removeTemporaryLayerNodes(graph)
     }
 
     private assignLayers(graph: Graph): void {
@@ -51,7 +51,7 @@ export class SugiyamaLayout implements GraphLayout {
                         }
                     ],
                 })
-                temporaryNode.width = lastEdge.fromPort.node.width
+                temporaryNode.width = graph.totalPortWidth
 
                 temporaryNode.layer = i
                 this.temporaryNodes.push(temporaryNode)
@@ -134,8 +134,9 @@ export class SugiyamaLayout implements GraphLayout {
             const layerNodes = graph.nodes.filter(node => node.layer === layer)
             layerNodes.sort((nodeA, nodeB) => this.calculateBarycenter(graph, nodeA) - this.calculateBarycenter(graph, nodeB))
         }
-        
-        this.minimiseCrossings(graph)
+        if (this.enableMinimiseCrossings) {
+            this.minimiseCrossings(graph)
+        }
     }
 
     private calculateBarycenter(graph: Graph, node: GraphNode): number {
