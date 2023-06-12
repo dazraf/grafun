@@ -4,12 +4,17 @@ import { GraphDefinition, GraphEdgeDefinition, GraphNodeDefinition, GraphPortDef
 import { GraphDataProvider } from "./GraphDefinitionProvider"
 
 export class RandomGraphGenerator implements GraphDataProvider {
+    #nodeCount: number
     #data: GraphDefinition
 
     constructor(public nodeCount: number) {
         // generate nodeCount nodes
-        const nodes =
-         arrayRange(nodeCount).map(i => {
+        this.#nodeCount = nodeCount
+        this.generate()
+    }
+
+    generate() {
+        const nodes = arrayRange(this.#nodeCount).map(i => {
             const inputs: GraphPortDefinition[] = arrayRange(2).map(i => {
                 return {
                     name: `input-${i}`,
@@ -29,17 +34,15 @@ export class RandomGraphGenerator implements GraphDataProvider {
                 outputs: outputs
             } as GraphNodeDefinition
         })
-        const inputs = nodes.flatMap(node =>
-             node.inputs.map(port => { 
-                const portRef: GraphPortRef = { nodeId: node.id, portName: port.name }
-                return portRef;
-             }))
+        const inputs = nodes.flatMap(node => node.inputs.map(port => {
+            const portRef: GraphPortRef = { nodeId: node.id, portName: port.name }
+            return portRef
+        }))
 
-        const outputs = nodes.flatMap(node =>
-             node.outputs.map(port => { 
-                const portRef: GraphPortRef = { nodeId: node.id, portName: port.name }
-                return portRef;
-             }))
+        const outputs = nodes.flatMap(node => node.outputs.map(port => {
+            const portRef: GraphPortRef = { nodeId: node.id, portName: port.name }
+            return portRef
+        }))
         const edges: GraphEdgeDefinition[] = []
 
         while (inputs.length > 0 && outputs.length > 0) {
@@ -49,7 +52,7 @@ export class RandomGraphGenerator implements GraphDataProvider {
             const inputPortRef = inputs[inputIndex]
             outputs.splice(outputIndex, 1)
             inputs.splice(inputIndex, 1)
-            edges.push({   
+            edges.push({
                 label: generateRandomName(),
                 from: outputPortRef,
                 to: inputPortRef
