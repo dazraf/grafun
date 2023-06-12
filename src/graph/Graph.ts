@@ -139,8 +139,18 @@ export class GraphPort implements GraphPortDefinition {
     get id(): string {
         return `${this.node.id}.${this.name}`
     }
+     
     get x(): number {
-        return this.node.x + this.node.padding + this.index * this.node.graph.totalPortWidth
+        let ports: GraphPort[]
+        if (this.portType === PortType.Input) {
+            ports = this.node.inputs
+        } else {
+            ports = this.node.outputs
+        }
+        const portsWidth = (ports.length * this.width) + (ports.length - 1) * this.node.graph.portGap
+        const middle = this.node.x + this.node.width / 2
+        const start = middle - portsWidth / 2
+        return start + this.index * this.node.graph.portWidth + this.index * this.node.graph.portGap
     }
 
     get y(): number {
