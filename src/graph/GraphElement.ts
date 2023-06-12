@@ -3,10 +3,11 @@ import { LitElement, svg, css, html, PropertyValueMap } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { GraphEdge, Graph, GraphNode, GraphPort } from "./Graph"
 import { SugiyamaLayout } from "./layouts/SugiyamaLayout"
-import { GraphDataProvider } from "./data/GraphDefinitionProvider"
+// import { GraphDataProvider } from "./data/GraphDefinitionProvider"
 import { RandomGraphGenerator } from "./data/RandomGraphGenerator"
-import { FileGraphDataProvider } from "./data/FileGraphDataProvider"
-import { ExampleDataProvider } from "./data/ExampleData"
+import { SampleFileGraphDataProvider } from "./data/FileGraphDataProvider"
+import { GraphDefinition } from "./data/GraphDefinition"
+// import { ExampleDataProvider } from "./data/ExampleData"
 
 
 interface PanState {
@@ -23,16 +24,16 @@ class GraphElement extends LitElement {
         background: white;
     }  
     #main-canvas {
-        background-color: rgb(66, 66, 66);
+        background-color: rgb(0, 0, 10);
         height: 100%;
         width: 100%;
         viewBox: 0 0 100% 100%;
     }
     .node {
-        fill: rgb(52, 52, 52, 0.5);
+        fill: rgb(52, 52, 100, 0.5);
     }
     .node-label {
-        fill: rgb(192, 224, 77);
+        fill: rgb(192, 192, 192);
         font-family: monospace;
         font-size: 12pt;
     }
@@ -62,21 +63,48 @@ class GraphElement extends LitElement {
     `;
 
     @state()
-    dataProvider = new RandomGraphGenerator(20)
-    // dataProvider = new FileGraphDataProvider();
+    randomProvider = new RandomGraphGenerator(8)
+    @state()
+    sampleFileProvider = new SampleFileGraphDataProvider();
     // dataProvider = new ExampleDataProvider()
+    @state()
+    minimiseCrossings = true
+
     private panningState: PanState | undefined
     private graph: Graph = new Graph()
 
     connectedCallback(): void {
         super.connectedCallback()
+        this.buildGraph(this.sampleFileProvider.data)
         this.layoutGraph()
-        console.log(this.dataProvider.data)
+        console.log(this.sampleFileProvider.data)
         console.log(this.graph)
     }
 
+    copy() {
+        navigator.clipboard.writeText(JSON.stringify(this.sampleFileProvider.data))
+    }
+
+    random() {
+        this.randomProvider.generate()
+        this.buildGraph(this.randomProvider.data)
+        this.layoutGraph()
+        this.requestUpdate()
+    }
+    
     protected render() {
         return html`
+            <div class="toolbar">
+                <button @click="${() => this.copy()}">Copy</button>
+                <button @click="${() => this.random()}">Random</button>
+                <input
+                    name="minimise-crossings" 
+                    type="checkbox"
+                    value=${this.minimiseCrossings}
+                    .checked=${this.minimiseCrossings}
+                    @click=${this.toggleMinimiseCrossings}>
+                    <label for="minimise-crossings">Minimise crossings</label>
+            </div>
             <svg 
                 version="1.1" xmlns="http://www.w3.org/2000/svg" 
                 viewBox="${this.graph.viewBoxString}"
@@ -95,6 +123,13 @@ class GraphElement extends LitElement {
         svg.addEventListener('mouseup', e => { this.onMouseUp(e) })
         svg.addEventListener('mousemove', e => { this.onMouseMove(e) })
         svg.addEventListener('click', e => { this.onSvgClick(e) })
+    }
+
+    private toggleMinimiseCrossings() {
+        this.minimiseCrossings = !this.minimiseCrossings
+        this.buildGraph(this.sampleFileProvider.data)
+        this.layoutGraph()
+        this.requestUpdate()
     }
 
     private onWheel(e: WheelEvent) {
@@ -150,9 +185,8 @@ class GraphElement extends LitElement {
         console.log(edge.pathDefinition)
     }
 
-
-    private layoutGraph() {
-        this.graph = Graph.buildGraph(this.dataProvider.data)
+    private buildGraph(data: GraphDefinition) {
+        this.graph = Graph.buildGraph(data)
         this.graph.viewBox.x = 0
         this.graph.viewBox.y = 0
         this.graph.viewBox.width = this.host.clientWidth
@@ -160,8 +194,9 @@ class GraphElement extends LitElement {
         this.graph.portHeight = 8
         this.graph.portWidth = 8
         this.graph.portGap = 20
-        // new CrappyLayout().layout(this.graph)
-        new SugiyamaLayout(50).layout(this.graph)
+    }
+    private layoutGraph() {
+        new SugiyamaLayout(50, 100, this.minimiseCrossings).layout(this.graph)
         this.graph.viewBox.x = this.graph.graphBounds.x - 50
         this.graph.viewBox.y = this.graph.graphBounds.y - 50
         this.graph.viewBox.width = this.graph.graphBounds.width + 100
