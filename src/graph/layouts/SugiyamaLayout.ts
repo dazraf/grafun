@@ -36,6 +36,7 @@ export class SugiyamaLayout implements GraphLayout {
             // the two nodes together in a chain
             let lastEdge = edge
             
+            // create a temporary node for every layer that separates the layers of the two nodes
             for (let i = edge.fromPort.node.layer + 1; i < edge.toPort.node.layer; ++i) {
                 const temporaryNode = graph.addNode({
                     id: uuid4(),
@@ -54,6 +55,9 @@ export class SugiyamaLayout implements GraphLayout {
                 temporaryNode.width = graph.totalPortWidth
 
                 temporaryNode.layer = i
+                temporaryNode.visible = false
+                temporaryNode.height = 0
+
                 this.temporaryNodes.push(temporaryNode)
                 graph.addEdge({
                     from: {
@@ -63,6 +67,19 @@ export class SugiyamaLayout implements GraphLayout {
                     to: {
                         nodeId: temporaryNode.id,
                         portName: "in"
+                    },
+                    metadata: {
+                        isTemporary: true
+                    }
+                })
+                graph.addEdge( {
+                    from: {
+                        nodeId: temporaryNode.id,
+                        portName: "in"
+                    },
+                    to: {
+                        nodeId: temporaryNode.id,
+                        portName: "out"
                     },
                     metadata: {
                         isTemporary: true
@@ -164,9 +181,9 @@ export class SugiyamaLayout implements GraphLayout {
             const layerNodes = graph.nodes.filter(node => node.layer === layer)
             for (let i = 0; i < layerNodes.length; i++) {
                 const previousNodeX = i > 0 ? layerNodes[i - 1].x : 0
-                const previewNodeWidth = i > 0 ? layerNodes[i - 1].width : 0
-                layerNodes[i].x = previousNodeX + previewNodeWidth + this.nodeSpacing
-                layerNodes[i].y = layer * (layerNodes[i].height + this.layerSpacing)
+                const previousNodeWidth = i > 0 ? layerNodes[i - 1].width : 0
+                layerNodes[i].x = previousNodeX + previousNodeWidth /2 + layerNodes[i].width / 2 + this.nodeSpacing
+                layerNodes[i].y = layer * (graph.nodeHeight + this.layerSpacing)
             }
         }
     }

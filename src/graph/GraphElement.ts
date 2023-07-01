@@ -3,11 +3,9 @@ import { LitElement, svg, css, html, PropertyValueMap } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { GraphEdge, Graph, GraphNode, GraphPort } from "./Graph"
 import { SugiyamaLayout } from "./layouts/SugiyamaLayout"
-// import { GraphDataProvider } from "./data/GraphDefinitionProvider"
 import { RandomGraphGenerator } from "./data/RandomGraphGenerator"
 import { SampleFileGraphDataProvider } from "./data/FileGraphDataProvider"
 import { GraphDefinition } from "./data/GraphDefinition"
-// import { ExampleDataProvider } from "./data/ExampleData"
 
 
 interface PanState {
@@ -63,35 +61,43 @@ class GraphElement extends LitElement {
     `;
 
     @state()
-    randomProvider = new RandomGraphGenerator(8)
+    numberOfNodes = 10
+
     @state()
     sampleFileProvider = new SampleFileGraphDataProvider();
-    // dataProvider = new ExampleDataProvider()
+    
     @state()
     minimiseCrossings = true
 
     private panningState: PanState | undefined
+
+    private graphDefinition = this.sampleFileProvider.data
     private graph: Graph = new Graph()
 
     connectedCallback(): void {
         super.connectedCallback()
-        this.buildGraph(this.sampleFileProvider.data)
-        this.layoutGraph()
-        console.log(this.sampleFileProvider.data)
-        console.log(this.graph)
+        this.displayGraph()
     }
 
-    copy() {
+    private copy() {
         navigator.clipboard.writeText(JSON.stringify(this.sampleFileProvider.data))
     }
 
-    random() {
-        this.randomProvider.generate()
-        this.buildGraph(this.randomProvider.data)
+    private random() {
+        const randomGraphGenerator = new RandomGraphGenerator(this.numberOfNodes)
+        randomGraphGenerator.generate()
+        this.graphDefinition = randomGraphGenerator.data
+        this.displayGraph()
+    }
+
+    private displayGraph() {
+        this.buildGraph(this.graphDefinition)
         this.layoutGraph()
         this.requestUpdate()
+        console.log(this.graphDefinition)
+        console.log(this.graph)
     }
-    
+
     protected render() {
         return html`
             <div class="toolbar">
@@ -103,7 +109,16 @@ class GraphElement extends LitElement {
                     value=${this.minimiseCrossings}
                     .checked=${this.minimiseCrossings}
                     @click=${this.toggleMinimiseCrossings}>
-                    <label for="minimise-crossings">Minimise crossings</label>
+                <label for="minimise-crossings">Minimise crossings</label>
+                <input
+                    name="node-count"
+                    type="number"
+                    value="${this.numberOfNodes}"
+                    @change=${(e: InputEvent) => {
+                        this.numberOfNodes = parseInt((e.target as HTMLInputElement).value)
+                        this.random()
+                    }}>
+                <label for="node-count">Number of Nodes</label>
             </div>
             <svg 
                 version="1.1" xmlns="http://www.w3.org/2000/svg" 
@@ -127,9 +142,7 @@ class GraphElement extends LitElement {
 
     private toggleMinimiseCrossings() {
         this.minimiseCrossings = !this.minimiseCrossings
-        this.buildGraph(this.sampleFileProvider.data)
-        this.layoutGraph()
-        this.requestUpdate()
+        this.displayGraph()
     }
 
     private onWheel(e: WheelEvent) {
@@ -195,8 +208,9 @@ class GraphElement extends LitElement {
         this.graph.portWidth = 8
         this.graph.portGap = 20
     }
+
     private layoutGraph() {
-        new SugiyamaLayout(50, 100, this.minimiseCrossings).layout(this.graph)
+        new SugiyamaLayout(20, 100, this.minimiseCrossings).layout(this.graph)
         this.graph.viewBox.x = this.graph.graphBounds.x - 50
         this.graph.viewBox.y = this.graph.graphBounds.y - 50
         this.graph.viewBox.width = this.graph.graphBounds.width + 100
@@ -206,14 +220,14 @@ class GraphElement extends LitElement {
     private renderGraph() {
         return svg`
             ${this.graph.edges.map(edge => this.renderEdge(edge))}
-            ${this.graph.nodes.map(node => this.renderNode(node))}
+            ${this.graph.nodes.filter(node => node.visible).map(node => this.renderNode(node))}
         `
     }
 
     private renderNode(node: GraphNode) {
         return svg`
-            <rect class="node" x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}"/>
-            <text class="node-label" x="${node.x + node.padding}" y="${node.y + node.height / 2}" text-anchor="start" dominant-baseline="middle">${node.label}</text>
+            <rect class="node" x="${node.x - node.width / 2}" y="${node.y - node.height / 2}" width="${node.width}" height="${node.height}"/>
+            <text class="node-label" x="${node.x - node.width / 2 + node.padding}" y="${node.y}" text-anchor="start" dominant-baseline="middle">${node.label}</text>
             ${this.renderPorts(node)}
         `
     }

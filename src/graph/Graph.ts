@@ -77,7 +77,8 @@ export class GraphNode implements GraphNodeDefinition {
     graph: Graph
     layer = 0
     #width: number | undefined
-
+    visible = true
+    height: number
 
     constructor(node: GraphNodeDefinition, graph: Graph) {
         this.id = node.id
@@ -86,14 +87,11 @@ export class GraphNode implements GraphNodeDefinition {
         this.outputs = node.outputs.map((output, index) => new GraphPort(output, PortType.Output, index, this))
         this.graph = graph
         this.metadata = node.metadata ?? {}
+        this.height = this.graph.nodeHeight
     }
 
     get padding(): number {
         return this.graph.nodePadding
-    }
-
-    get height() {
-        return this.graph.nodeHeight
     }
 
     get width(): number {
@@ -148,16 +146,16 @@ export class GraphPort implements GraphPortDefinition {
             ports = this.node.outputs
         }
         const portsWidth = (ports.length * this.width) + (ports.length - 1) * this.node.graph.portGap
-        const middle = this.node.x + this.node.width / 2
+        const middle = this.node.x
         const start = middle - portsWidth / 2
         return start + this.index * this.node.graph.portWidth + this.index * this.node.graph.portGap
     }
 
     get y(): number {
         if (this.portType === PortType.Input) {
-            return this.node.y - this.node.graph.portHeight + this.node.graph.portHeight
+            return this.node.y - this.node.height / 2 - this.node.graph.portHeight / 2
         } else {
-            return this.node.y + this.node.graph.nodeHeight - this.node.graph.portHeight
+            return this.node.y + this.node.height / 2 - this.node.graph.portHeight / 2
         }
     }
 
